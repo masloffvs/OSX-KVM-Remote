@@ -138,7 +138,7 @@ class QemuOpenCoreRunnable {
 		});
 
 		qemuProcess.stderr.on('data', (data) => {
-			// console.error(data)
+			console.error(data)
 		});
 
 		qemuProcess.on('exit', (code, signal) => {
