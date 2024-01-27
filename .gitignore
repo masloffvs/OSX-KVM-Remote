@@ -10,8 +10,6 @@ mac_hdd_ng.img
 prebuilt
 BaseSystem.img
 BaseSystem.dmg
-OVMF_VARS-1024x768.fd
-OVMF_VARS*.fd
 OpenCore-Catalina/EFI/OC/Resources/
 .snapshots
 .idea
