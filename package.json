@@ -21,6 +21,7 @@
     "express": "^4.18.2",
     "express-basic-auth": "^1.2.1",
     "express-react-views": "^0.11.0",
+    "express-requests-logger": "^4.0.0",
     "find-free-ports": "^3.1.1",
     "md5": "^2.3.0",
     "pidusage": "^3.0.2",

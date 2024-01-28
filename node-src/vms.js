@@ -1,6 +1,10 @@
 const {logger} = require("./logger");
 const {Throwable} = require("./Throwable");
 
+/**
+ *
+ * @type {{runnable: ChildProcess, proc: QemuOpenCoreRunnable}[]}
+ */
 const vms = new Proxy({}, {
 	get(target, prop, receiver) {
 		logger.debug(`get(vms["${prop}"])`)

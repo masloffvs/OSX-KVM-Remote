@@ -156,8 +156,13 @@ const options = {
 module.exports = {
 	async createRandomMacOSHDD(path) {
 		const uniqueOptions = generateUniqueValues(options);
+		const finalOptions = {...uniqueOptions, OUTPUT_QCOW: path}
 
-		const imgCreator = new SerialDisk({...uniqueOptions, OUTPUT_QCOW: path});
-		return await imgCreator.createImage();
+		const imgCreator = new SerialDisk(finalOptions);
+
+		return {
+			creator: await imgCreator.createImage(),
+			finalOptions
+		};
 	}
 }

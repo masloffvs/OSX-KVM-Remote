@@ -13,13 +13,25 @@ module.exports = {
 			winston.format.printf(
 				// Custom printf formatter
 				(info) => {
+					let text = info.message
+
+					if (typeof info.message === 'object') {
+						text = JSON.stringify(info.message)
+
+						if (info.message.request && info.message.response) {
+							const r = info.message.request
+
+							text = `${r.method} (${r.url})`
+						}
+					}
+
 					if (info.vm) {
 						return `${info.timestamp} [${color.fg.yellow(info.vm)}] <${info.level}>: ${
-							info.message
+							text
 						}`
 					} else {
 						return `${info.timestamp} <${info.level}>: ${
-							info.message
+							text
 						}`
 					}
 				},

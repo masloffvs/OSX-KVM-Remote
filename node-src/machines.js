@@ -3,6 +3,7 @@ const {vncDisplay} = require("./helpers/VncDisplay");
 const {driverDevice, VirtualDrive} = require("./helpers/Drive");
 const {NetDeviceWithMultiplyForward} = require("./helpers/NetDevice");
 const path = require("node:path");
+const DiskLink = require("./DiskLink");
 
 const netDevice = new NetDeviceWithMultiplyForward('net0', [
 	// {
@@ -10,23 +11,6 @@ const netDevice = new NetDeviceWithMultiplyForward('net0', [
 	// 	vm: 22
 	// }
 ]);
-
-const openCoreBoot = new VirtualDrive(
-	Infinity,
-	'qcow2',
-	'OpenCoreBoot',
-	path.normalize(process.cwd() + '/OpenCore/OpenCore.qcow2')
-);
-
-const installMedia = new VirtualDrive(
-	Infinity,
-	'raw',
-	'InstallMedia',
-	path.normalize(process.cwd() + '/prebuilt/basesystems/BaseSystem-Sonoma.img'),
-	undefined,
-	'none',
-	false
-);
 
 module.exports = {
 	Machine: {
@@ -38,8 +22,8 @@ module.exports = {
 					netDevice
 				],
 				storageDevices: [
-					openCoreBoot,
-					installMedia
+					DiskLink.openCoreBoot,
+					DiskLink.installMedia
 				],
 				customDeviceParams: [
 					driverDevice('isa-applesmc', { osk: 'ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc' }),

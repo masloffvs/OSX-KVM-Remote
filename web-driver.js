@@ -2,6 +2,13 @@ const banner = ('CuKWiOKWiOKVl-KWkeKWkeKWiOKWiOKVl-KWiOKWiOKVl-KWkeKWkeKWkeKWiOK
 
 console.log(Buffer.from(banner, 'base64').toString())
 console.log('')
+console.log(' Welcome to the Hypervisor for MacOS Images')
+console.log(' Attention! THIS IS NOT A STABLE BUILD. USE IT FOR EXPERIMENTATION ONLY')
+console.log('')
+console.log(' Credits (without them this fork would not exist)')
+console.log('  - https://github.com/kholia/OSX-KVM')
+console.log('  - https://github.com/sickcodes/Docker-OSX')
+console.log('')
 
 const {createFolderIfNotExists} = require("./node-src/boot");
 const {workers} = require("./node-src/workers");
@@ -27,8 +34,14 @@ const {logger} = require("./node-src/logger");
 const {vms} = require("./node-src/vms");
 const basicAuth = require('express-basic-auth')
 const {PhantomFile} = require("./node-src/helpers/PhantomFile");
+const path = require("node:path");
+const audit = require('express-requests-logger')
 
 app.use(express.json());
+app.use(audit({
+	logger
+}))
+
 app.use('/public', express.static(process.cwd() + '/node-src/public'))
 
 if (fs.existsSync(process.cwd() + "/http.json")) {
@@ -72,7 +85,7 @@ app.get('/api/vms/list', function(req, res){
 	)
 });
 
-app.get('/api/disks', async (req, res) => {
+app.get('/api/resources/disks/list', async (req, res) => {
 	const files = fs.readdirSync(process.cwd() + '/disks').map(img => {
 		const stat = fs.statSync(process.cwd() + '/disks/' + img)
 		return {
@@ -85,15 +98,34 @@ app.get('/api/disks', async (req, res) => {
 	res.json(files)
 });
 
+app.get('/api/resources/snapshots/list', async (req, res) => {
+	const files = fs.readdirSync(process.cwd() + '/.snapshots').map(snapshot => {
+		const snapshotFilePath = path.normalize(process.cwd() + '/.snapshots/' + snapshot)
+
+		return {
+			name: snapshot,
+			data: JSON.parse(String(fs.readFileSync(snapshotFilePath)))
+		}
+	})
+
+	res.json(files)
+});
+
 app.post('/api/vms/create', async (req, res) => {
 	const { name, version } = req.body;
+
+	if (!/^[a-zA-Z]+$/.test(name)) {
+		return res.status(400).json({
+			error: `virtual machine name is incorrect. it can be specified exclusively in English characters, without special characters, spaces or numbers`
+		})
+	}
 
 	const snapshotFilePath = process.cwd() + '/.snapshots/' + md5(name) + '.json'
 	const hddSrc = process.cwd() + `/disks/HDD-${md5(name)}.img`
 
 	if (fs.existsSync(snapshotFilePath)) {
 		return res.status(500).json({
-			message: `virtual machine named '${name}' already exists and can only be launched via the run command`
+			error: `virtual machine named '${name}' already exists and can only be launched via the run command`
 		});
 	}
 
@@ -112,8 +144,10 @@ app.post('/api/vms/create', async (req, res) => {
 		})
 	}
 
+	let optionsOfUniqMacHDD = null
+
 	if (!fs.existsSync(hddSrc)) {
-		await createRandomMacOSHDD(hddSrc)
+		optionsOfUniqMacHDD = await createRandomMacOSHDD(hddSrc)
 	}
 
 	fs.accessSync(hddSrc)
@@ -170,10 +204,20 @@ app.post('/api/vms/create', async (req, res) => {
 			proc = Machine.sonoma(opt)
 	}
 
-
 	fs.writeFileSync(
-		process.cwd() + "/.snapshots/" + md5(name) + ".json",
-		JSON.stringify(proc.getArgs(), null, 2),
+		snapshotFilePath,
+		JSON.stringify({
+			creationDate: new Date(),
+			userDisks: [
+				hddForMacData
+			],
+			snapshotFilePath,
+			vncArgs,
+			optionsOfUniqMacHDD,
+			name,
+
+			argv: proc.getArgs(),
+		}, null, 2),
 	)
 
 	const runnable = proc.run()
@@ -194,17 +238,17 @@ app.post('/api/vms/create', async (req, res) => {
 
 app.post('/api/vms/:name/start', (req, res) => {
 	const name = req.params.name;
-	const path = process.cwd() + '/.snapshots/' + md5(name) + '.json'
+	const snapshotFilePath = process.cwd() + '/.snapshots/' + md5(name) + '.json'
 
 	if (typeof vms[name] != "undefined") {
 		return res.status(500).json({
-			message: 'such a VM already exists and is running'
+			error: 'such a VM already exists and is running'
 		});
 	}
 
-	if (!fs.existsSync(path)) {
+	if (!fs.existsSync(snapshotFilePath)) {
 		return res.status(404).json({
-			message: `vm "${name}" not found`
+			error: `vm "${name}" not found`
 		});
 	}
 
@@ -218,7 +262,7 @@ app.post('/api/vms/:name/start', (req, res) => {
 		},
 	})
 
-	proc.setArgs(require(path))
+	proc.setArgs(require(snapshotFilePath).argv)
 
 	const runnable = proc.run()
 
@@ -255,7 +299,31 @@ app.get('/api/vms/:name/stdout', (req, res) => {
 });
 
 app.post('/api/vms/:name/stop', (req, res) => {
+	const name = req.params.name;
+	const snapshotFilePath = process.cwd() + '/.snapshots/' + md5(name) + '.json'
 
+	if (!fs.existsSync(snapshotFilePath)) {
+		return res.status(404).json({
+			message: `vm "${name}" not found`
+		});
+	}
+
+	if (vms[name]) {
+		vms[name].runnable.kill(9)
+
+		pidusage(vms[name].runnable.pid)
+			.then(i => {
+
+			})
+			.catch((i) => {
+				res.json({
+					name,
+					process: i
+				})
+
+				delete vms[name]
+			})
+	}
 });
 
 const port = process.env.PORT || 3000;
