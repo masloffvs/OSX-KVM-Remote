@@ -6,6 +6,7 @@ const vms = new Proxy({}, {
 		logger.debug(`get(vms["${prop}"])`)
 		return target[prop];
 	},
+
 	set(target, p, newValue, receiver) {
 		if (typeof newValue !== 'object') {
 			throw new Throwable(

@@ -26,6 +26,7 @@ const {createRandomMacOSHDD} = require("./node-src/utils/serialDisk");
 const {logger} = require("./node-src/logger");
 const {vms} = require("./node-src/vms");
 const basicAuth = require('express-basic-auth')
+const {PhantomFile} = require("./node-src/helpers/PhantomFile");
 
 app.use(express.json());
 app.use('/public', express.static(process.cwd() + '/node-src/public'))
@@ -117,6 +118,19 @@ app.post('/api/vms', async (req, res) => {
 
 	fs.accessSync(hddSrc)
 
+	const ovmfCodeFile = new PhantomFile({path: process.cwd() + "/OVMF_CODE.fd"})
+	const ovmfVars1024x768File = new PhantomFile({path: process.cwd() + "/OVMF_VARS-1024x768.fd"})
+
+	const hddForMacData = new VirtualDrive(
+		Infinity,
+		'qcow2',
+		'MacHDD',
+		hddSrc,
+		undefined,
+		'none',
+		false
+	)
+
 	const proc = Machine.sonoma({
 		storageDevices: [
 			DiskLink
@@ -127,15 +141,7 @@ app.post('/api/vms', async (req, res) => {
 				.installMedia
 				.createGhostDrive(),
 
-			new VirtualDrive(
-				Infinity,
-				'qcow2',
-				'MacHDD',
-				hddSrc,
-				undefined,
-				'none',
-				false
-			)
+			hddForMacData
 		],
 
 		onStdoutData: function (byte) {
@@ -149,9 +155,10 @@ app.post('/api/vms', async (req, res) => {
 		...vncDisplayArguments(vncArgs),
 
 		otherArgs: [
-			'-drive if=pflash,format=raw,readonly,file="./OVMF_CODE.fd"',
-			'-drive if=pflash,format=raw,file="./OVMF_VARS-1024x768.fd"',
-			'-device ide-hd,bus=sata.4,drive=MacHDD',
+			`-drive if=pflash,format=raw,readonly,file="${ovmfCodeFile.createTempPersistentFile()}"`,
+			`-drive if=pflash,format=raw,file="./${ovmfVars1024x768File.createTempPersistentFile()}"`,
+
+			`-device ide-hd,bus=sata.4,drive=${hddForMacData.id || hddForMacData.label}`,
 			'-smbios type=2'
 		]
 	})
