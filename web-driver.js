@@ -77,7 +77,11 @@ app.post('/api/vms/basic-remote', async (req, res) => {
 				Infinity,
 				'qcow2',
 				'MacHDD',
-				hddSrc
+				hddSrc,
+				undefined,
+				'none',
+				false,
+				1
 			)
 		],
 
