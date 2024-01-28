@@ -3,6 +3,8 @@ const path_ = require("node:path");
 const crypto = require('node:crypto');
 const {parseQemuDiskInfo} = require("./QemuDiskInfo");
 const md5 = require('md5');
+const {logger} = require("../logger");
+const {Throwable} = require("../Throwable");
 
 function generateHardDiskID(length = 12) {
 	const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
@@ -108,14 +110,29 @@ class VirtualDrive extends Drive {
 	) {
 		super(size, format, label);
 
+		logger.info(`init VirtualDrive "${label || id || path}"`)
+
 		if (typeof path != 'string') {
-			throw 'path not string'
+			logger.error(`init VirtualDrive "${label || id || path}"`)
+			throw new Throwable(
+				"Only the string can be specified as the path to the virtual disk file",
+				VirtualDrive
+			)
 		}
 
 		if (path_.isAbsolute(path)) {
 			this.path = path;
 		} else {
 			this.path = path_.normalize(process.cwd() + '/' + path);
+		}
+
+		if (!fs.existsSync(this.path)) {
+			logger.error(`virtual disk at path '${this.path}' not found`)
+			throw new Throwable(
+				"The virtual disk was not created because the virtual disk file was not found at the specified path",
+				VirtualDrive,
+				{classdump: this}
+			)
 		}
 
 		fs.accessSync(this.path); // Ensure the file at 'path' exists

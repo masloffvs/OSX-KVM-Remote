@@ -32,9 +32,8 @@ module.exports = {
 	Machine: {
 		sonoma(options) {
 			const opt = Object.assign({
-				kvm: false,
+				kvm: process.platform === 'linux',
 				nographic: true,
-				displayDevices: vncDisplay(undefined, 1),
 				networkDevices: [
 					netDevice
 				],

@@ -18,3 +18,4 @@ backups
 .vnc-port
 disks
 node_modules
+http.json
