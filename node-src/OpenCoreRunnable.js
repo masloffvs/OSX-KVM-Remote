@@ -79,7 +79,7 @@ class QemuOpenCoreRunnable {
 			const networkDeviceArgs = networkDevices.flatMap(device => device.getConfig());
 			const storageDeviceArgs = storageDevices.map(device => device.getQemuDriveConfig());
 
-			this._args = [
+			this._args = Object.freeze([
 				kvm ? '-enable-kvm' : '',
 				'-m', allocatedRam,
 				'-cpu', `${cpuType},${cpuOptions}`,
@@ -94,7 +94,7 @@ class QemuOpenCoreRunnable {
 				...displayDevices,
 				...customDeviceParams,
 				...otherArgs
-			];
+			]);
 		}
 
 		return this._args

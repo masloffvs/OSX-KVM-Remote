@@ -63,7 +63,7 @@ app.get('/', function(req, res){
 	});
 });
 
-app.get('/api/vms', function(req, res){
+app.get('/api/vms/list', function(req, res){
 	res.json(
 		Object.entries(vms).map(pair => ({
 			name: pair[0],
@@ -85,8 +85,8 @@ app.get('/api/disks', async (req, res) => {
 	res.json(files)
 });
 
-app.post('/api/vms', async (req, res) => {
-	const { name } = req.body;
+app.post('/api/vms/create', async (req, res) => {
+	const { name, version } = req.body;
 
 	const snapshotFilePath = process.cwd() + '/.snapshots/' + md5(name) + '.json'
 	const hddSrc = process.cwd() + `/disks/HDD-${md5(name)}.img`
@@ -131,7 +131,7 @@ app.post('/api/vms', async (req, res) => {
 		false
 	)
 
-	const proc = Machine.sonoma({
+	const opt = {
 		storageDevices: [
 			DiskLink
 				.openCoreBoot
@@ -155,13 +155,21 @@ app.post('/api/vms', async (req, res) => {
 		...vncDisplayArguments(vncArgs),
 
 		otherArgs: [
-			`-drive if=pflash,format=raw,readonly,file="${ovmfCodeFile.createTempPersistentFile()}"`,
-			`-drive if=pflash,format=raw,file="./${ovmfVars1024x768File.createTempPersistentFile()}"`,
+			`-drive if=pflash,format=raw,file="${ovmfCodeFile.createTempPersistentFile()}"`,
+			`-drive if=pflash,format=raw,file="${ovmfVars1024x768File.createTempPersistentFile()}"`,
 
 			`-device ide-hd,bus=sata.4,drive=${hddForMacData.id || hddForMacData.label}`,
 			'-smbios type=2'
 		]
-	})
+	}
+
+	let proc
+
+	switch (version) {
+		case 'sonoma':
+			proc = Machine.sonoma(opt)
+	}
+
 
 	fs.writeFileSync(
 		process.cwd() + "/.snapshots/" + md5(name) + ".json",
