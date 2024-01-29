@@ -3,6 +3,7 @@ import subprocess
 import requests
 import argparse
 import shutil
+import xml.etree.ElementTree as ET
 
 
 # URL to download the 'opencore-image-ng.sh' script
@@ -10,6 +11,42 @@ OPENCORE_IMAGE_MAKER_URL = 'https://raw.githubusercontent.com/sickcodes/osx-seri
 
 # URL to download the master configuration plist file
 MASTER_PLIST_URL = 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-nopicker-custom.plist'
+
+def print_node(node, indent=0):
+    # Create a string with spaces for indentation
+    space = " " * indent
+
+    if node.tag == "key":
+        # If the node is a key, print it followed by a colon
+        print(f"{space}{node.text}: ", end="")
+    elif node.tag in ["string", "integer", "true", "false", "data"]:
+        # If the node is one of these types, print its text
+        print(f"{node.text}")
+    elif node.tag in ["dict", "array"]:
+        # If the node is a dictionary or an array, print a newline
+        print()
+        # Iterate through its children and print them with increased indentation
+        for child in node:
+            print_node(child, indent + 2)
+    else:
+        # For other node types, just iterate through the children
+        for child in node:
+            print_node(child, indent)
+
+def parse_plist_for_platform_info(xml_data):
+    print("PlatformInfo:")
+    # Parse the XML data into an ElementTree object
+    root = ET.fromstring(xml_data)
+    inside_platform_info = False
+
+    for child in root.iter():
+        if child.tag == "key" and child.text == "PlatformInfo":
+            # If we find a "PlatformInfo" key, set a flag to indicate we are inside it
+            inside_platform_info = True
+        elif child.tag == "dict" and inside_platform_info:
+            # If we are inside "PlatformInfo" and find a dictionary, start printing its contents
+            print_node(child, 1)
+            break  # Exit the loop after printing the first dictionary
 
 
 # This function is responsible for downloading an EFI folder required for running macOS on a KVM virtual machine.
@@ -118,7 +155,7 @@ def generate_bootdisk(
     with open('./tmp.config.plist', 'w') as file:
         file.write(plist)
 
-    print(plist)
+    parse_plist_for_platform_info(plist)
 
     imgNgPath = [
         './opencore-image-ng.sh',
