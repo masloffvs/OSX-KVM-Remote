@@ -208,5 +208,8 @@ if __name__ == '__main__':
     if not vars(args).get('bootpath').endswith(".qcow2"):
         raise ValueError('bootpath must be a valid path to the qcow disk')
 
+    if os.path.exists(vars(args).get('bootpath')):
+        raise ValueError('you are referencing an existing qcow file, it cannot be overwritten for security reasons')
+
     # Call the main function with the parsed arguments
     main(vars(args))
