@@ -45,8 +45,10 @@ convert_and_move() {
     local system_name_for_file="$2"
     local dmg_file="$3"
 
+    cd fetcher
+
     echo "Downloading $system_name_for_python..."
-    (cd fetcher && python3 getMacOs.py --short "$system_name_for_python")
+    python3 getMacOs.py --short "$system_name_for_python"
 
     echo "Converting $dmg_file to IMG..."
     dmg2img -i "$dmg_file" BaseSystem.img
