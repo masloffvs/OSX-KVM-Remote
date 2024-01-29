@@ -45,7 +45,7 @@ convert_and_move() {
     local system_name_for_file="$2"
     local dmg_file="$3"
 
-    cd fetcher
+    cd fetcher || exit
 
     echo "Downloading $system_name_for_python..."
     python3 getMacOs.py --short "$system_name_for_python"
@@ -55,7 +55,7 @@ convert_and_move() {
 
     if [ -f BaseSystem.img ]; then
         echo "Moving and renaming BaseSystem.img to BaseSystem-$system_name_for_file.img..."
-        mv BaseSystem.img "prebuilt/basesystems/BaseSystem-$system_name_for_file.img"
+        mv BaseSystem.img "../prebuilt/basesystems/BaseSystem-$system_name_for_file.img"
     fi
 }
 
