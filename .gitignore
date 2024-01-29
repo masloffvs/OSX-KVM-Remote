@@ -19,3 +19,6 @@ backups
 disks
 node_modules
 http.json
+serial_sets-*.tsv
+osx-serial-generator/OSX-KVM
+/osx-serial-generator/OSX-KVM/

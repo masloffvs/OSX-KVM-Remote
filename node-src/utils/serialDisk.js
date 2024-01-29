@@ -1,6 +1,7 @@
 const fs = require('fs');
 const util = require('util');
 const { exec } = require('child_process');
+const {logger} = require("../logger");
 
 const execPromise = util.promisify(exec);
 
@@ -107,31 +108,50 @@ class SerialDisk {
 				OUTPUT_QCOW = `./${SERIAL}.OpenCore-nopicker.qcow2`,
 			} = this.options;
 
-			const EFI_FOLDER = './OpenCore/EFI';
-			const RESOURCES_FOLDER = './resources/OcBinaryData/Resources';
-
-			// Function to download EFI folder and resources
-			const downloadEFIAndResources = async () => {
-				if (!fs.existsSync(EFI_FOLDER)) {
-					// Download EFI folder and resources here...
-					throw "EFI Fail"
-				}
-			};
-
 			// Function to generate the bootdisk
-			const generateBootdisk = async () => {
-				// Generate the bootdisk here...
-				const createImageCommand = `qemu-img create -f qcow2 ${OUTPUT_QCOW} ${size}`;
+			const generateBootdisk = () => {
+				return new Promise((resolve, reject) => {
+					logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`)
 
-				try {
-					await execPromise(createImageCommand);
-					console.log(`💽 Image ${OUTPUT_QCOW} created successfully.`);
-				} catch (error) {
-					console.error(`💽 Error creating the image: ${error}`);
-				}
+					// Generate the bootdisk here...
+					const createImageCommand = `./generate-unique-machine-values.sh \
+			    --model "${DEVICE_MODEL}" \
+			    --serial "${SERIAL}" \
+			    --board-serial "${BOARD_SERIAL}" \
+			    --uuid "${UUID}" \
+			    --mac-address "${MAC_ADDRESS}" \
+			    --output-bootdisk "${OUTPUT_QCOW}" \
+			    --width ${WIDTH} \
+			    --height ${HEIGHT}`;
+
+					try {
+						const child = exec(
+							createImageCommand.trim(),
+							{ cwd: `${process.cwd()}/osx-serial-generator` },
+							(error, stdout, stderr) => {
+								if (error) {
+									reject(error)
+								}
+							}
+						)
+
+						child.stdout.pipe(process.stdout)
+						child.stdin.pipe(process.stdin)
+
+						child.on('error', function (error) {
+							reject(error)
+						})
+
+						child.on('exit', function(code, signal) {
+							logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`)
+						})
+					} catch (error) {
+						reject(error)
+						logger.error(`💽 Error creating the image: ${error}`)
+					}
+				})
 			};
 
-			await downloadEFIAndResources();
 			await generateBootdisk();
 		} catch (error) {
 			console.error(`💽 Error creating the image: ${error}`);
