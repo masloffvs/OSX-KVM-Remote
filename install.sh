@@ -75,6 +75,10 @@ if sudo -v; then
         echo "1" > .vnc-port
     fi
 
+    chmod +x prebuild.sh
+    chmod +x install.sh
+    chmod +x get.sh
+
     # Changing directory to the cloned repository
     cd osx-serial-generator || exit
 
@@ -82,6 +86,7 @@ if sudo -v; then
     echo "[RUN_PREBUILT_SCRIPT]: Running prebuild.sh..."
     chmod +x prebuild.sh
     ./prebuild.sh
+
 else
     echo "Incorrect sudo password. Exiting..."
     exit 1
