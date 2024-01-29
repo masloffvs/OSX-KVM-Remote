@@ -127,11 +127,11 @@ def generate_bootdisk(
 
 def main(args):
     # Extract arguments from the provided dictionary
-    device_model = args['device_model']
-    serial = args['serial']
-    board_serial = args['board_serial']
-    uuid = args['uuid']
-    mac_address = args['mac_address']
+    device_model = args.get('device_model')
+    serial = args.get('serial')
+    board_serial = args.get('board_serial')
+    uuid = args.get('uuid')
+    mac_address = args.get('mac_address')
 
     download_qcow_efi_folder()
     generate_bootdisk(device_model, serial, board_serial, uuid, mac_address)
