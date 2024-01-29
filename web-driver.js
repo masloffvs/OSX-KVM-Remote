@@ -171,7 +171,7 @@ app.post('/api/vms/create', async (req, res) => {
 		optionsOfUniqMacHDD = await createRandomMacOSHDD(bootdiskSrc)
 	}
 
-	await (new ImgCreator(hddSrc, '256GB')).createImage()
+	await (new ImgCreator(hddSrc, '256G')).createImage()
 
 	fs.accessSync(bootdiskSrc)
 	fs.accessSync(hddSrc)
