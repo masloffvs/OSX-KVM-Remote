@@ -45,8 +45,6 @@ convert_and_move() {
     local system_name_for_file="$2"
     local dmg_file="$3"
 
-    cd fetcher || exit
-
     echo "Downloading $system_name_for_python..."
     python3 getMacOs.py --short "$system_name_for_python"
 
@@ -58,6 +56,8 @@ convert_and_move() {
         mv BaseSystem.img "../prebuilt/basesystems/BaseSystem-$system_name_for_file.img"
     fi
 }
+
+cd fetcher || exit
 
 # Download and rename for each system
 convert_and_move "sonoma" "Sonoma" "BaseSystem.dmg"
