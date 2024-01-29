@@ -150,4 +150,4 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Call the main function with the parsed arguments
-    main(args)
+    main(vars(args))
