@@ -195,7 +195,6 @@ done
 download_qcow_efi_folder () {
 
     export EFI_FOLDER=./OpenCore/EFI
-    export RESOURCES_FOLDER=./resources/OcBinaryData/Resources
 
     # check if we are inside OSX-KVM already
     # if not, download OSX-KVM locally
@@ -204,9 +203,7 @@ download_qcow_efi_folder () {
         export EFI_FOLDER="./OSX-KVM/${EFI_FOLDER}"
     }
     
-    [ -d ./resources/OcBinaryData/Resources/ ] || {
-        export RESOURCES_FOLDER="./OSX-KVM/${RESOURCES_FOLDER}"
-    }
+   export RESOURCES_FOLDER="./OSX-KVM/resources/OcBinaryData/Resources"
 
     # EFI Shell commands
     touch startup.nsh && echo 'fs0:\EFI\BOOT\BOOTx64.efi' > startup.nsh

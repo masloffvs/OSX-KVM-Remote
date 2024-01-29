@@ -143,7 +143,11 @@ class SerialDisk {
 						})
 
 						child.on('exit', function(code, signal) {
-							logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`)
+							if (code === 0) {
+								logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`)
+							} else {
+								reject(null)
+							}
 						})
 					} catch (error) {
 						reject(error)
