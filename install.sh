@@ -35,7 +35,7 @@ if sudo -v; then
               echo "[APT_INSTALL]: Detected Debian. Attempting to install QEMU from backports..."
               sudo echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/backports.list
               sudo apt update
-              sudo apt install -t buster-backports qemu -y
+              sudo apt install "qemu-system-*" -y
           else
               # If it's Ubuntu, install QEMU from official repositories
               echo "[APT_INSTALL]: Detected Ubuntu. Installing QEMU from official repositories..."
