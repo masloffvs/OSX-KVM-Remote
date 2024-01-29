@@ -158,7 +158,8 @@ if __name__ == '__main__':
     # Parse command-line arguments
     args = parser.parse_args()
 
-    print(vars(args))
+    if os.path.exists('./tmp.config.plist'):
+        os.remove('./tmp.config.plist')
 
     # Call the main function with the parsed arguments
     main(vars(args))
