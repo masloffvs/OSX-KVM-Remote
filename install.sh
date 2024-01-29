@@ -79,6 +79,9 @@ if sudo -v; then
     chmod +x install.sh
     chmod +x get.sh
 
+    # Prebuild all BaseSystem.img
+    ./prebuild.sh
+
     # Changing directory to the cloned repository
     cd osx-serial-generator || exit
 
