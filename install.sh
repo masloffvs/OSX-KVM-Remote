@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Color codes for formatting
+GREEN='\033[1;32m'
+RED='\033[1;31m'
+NC='\033[0m' # No Color
+
 # Requesting sudo password upfront for subsequent commands
 echo "Please enter your sudo password to allow the following commands to run without further prompts:"
 if sudo -v; then
@@ -20,29 +25,31 @@ if sudo -v; then
       echo "[APT_INSTALL]: Installing Linux kernel..."
       sudo apt install linux-generic -y
 
-      # Installing QEMU
-      echo "[APT_INSTALL]: Installing QEMU..."
-
-      # Check the operating system
-      if [[ -e /etc/debian_version ]]; then
-          # If it's Debian, try to install QEMU from backports
-          echo "[APT_INSTALL]: Detected Debian. Attempting to install QEMU from backports..."
-          sudo echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/backports.list
-          sudo apt update
-          sudo apt install -t buster-backports qemu -y
+      # Check if QEMU is already installed on Debian
+      if [[ -e /etc/debian_version && $(dpkg-query -W -f='${Status}' qemu 2>/dev/null | grep -c "ok installed") -eq 1 ]]; then
+          echo "[APT_INSTALL]: QEMU is already installed on Debian."
       else
-          # If it's Ubuntu, install QEMU from official repositories
-          echo "[APT_INSTALL]: Detected Ubuntu. Installing QEMU from official repositories..."
-          sudo apt install qemu -y
-      fi
+          # Check the operating system
+          if [[ -e /etc/debian_version ]]; then
+              # If it's Debian, try to install QEMU from backports
+              echo "[APT_INSTALL]: Detected Debian. Attempting to install QEMU from backports..."
+              sudo echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/backports.list
+              sudo apt update
+              sudo apt install -t buster-backports qemu -y
+          else
+              # If it's Ubuntu, install QEMU from official repositories
+              echo "[APT_INSTALL]: Detected Ubuntu. Installing QEMU from official repositories..."
+              sudo apt install qemu -y
+          fi
 
-      # Check if QEMU installation was successful
-      if [ $? -eq 0 ]; then
-          echo "[SUCCESS]: QEMU has been successfully installed."
-      else
-          # If installation failed, display an error message and exit
-          echo "[ERROR]: Failed to install QEMU."
-          exit 1
+          # Check if QEMU installation was successful
+          if [ $? -eq 0 ]; then
+              echo "[SUCCESS]: QEMU has been successfully installed."
+          else
+              # If installation failed, display an error message and exit
+              echo "[ERROR]: Failed to install QEMU."
+              exit 1
+          fi
       fi
     fi
 
