@@ -205,5 +205,8 @@ if __name__ == '__main__':
     if os.path.exists('./tmp.config.plist'):
         os.remove('./tmp.config.plist')
 
+    if not vars(args).get('bootpath').endswith(".qcow2"):
+        raise ValueError('bootpath must be a valid path to the qcow disk')
+
     # Call the main function with the parsed arguments
     main(vars(args))
