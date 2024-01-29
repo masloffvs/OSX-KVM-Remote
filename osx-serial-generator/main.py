@@ -111,6 +111,9 @@ def generate_bootdisk(
     with open('./tmp.config.plist', 'w') as file:
         subprocess.run(sed_command, stdout=file)
 
+    with open('./tmp.config.plist', 'r') as file:
+        print(file.read())
+
     imgNgPath = [
         './opencore-image-ng.sh',
         '--cfg',
@@ -153,6 +156,9 @@ if __name__ == '__main__':
 
     # Parse command-line arguments
     args = parser.parse_args()
+
+    print(vars(args))
+    exit(1)
 
     # Call the main function with the parsed arguments
     main(vars(args))

@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const util = require('node:util');
 const { exec } = require('child_process');
+const {logger} = require("../logger");
 
 const execPromise = util.promisify(exec);
 
@@ -11,13 +12,15 @@ class ImgCreator {
 	}
 
 	async createImage() {
+		logger.log(`💾 HDD ${this.filename} creating`);
+
 		const createImageCommand = `qemu-img create -f qcow2 ${this.filename} ${this.size}`;
 
 		try {
 			const { stdout, stderr } = await execPromise(createImageCommand);
-			console.log(`💾 HDD ${this.filename} created`);
+			logger.log(`💾 HDD ${this.filename} created`);
 		} catch (error) {
-			console.error(`💾 not created: ${error}`);
+			logger.error(`💾 not created: ${error}`);
 		}
 	}
 }
