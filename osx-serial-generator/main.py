@@ -91,28 +91,27 @@ def generate_bootdisk(
     rom = mac_address.replace(':', '').lower()
 
     # List of sed expressions to replace placeholders in the master plist
-    sed_expressions = [
-        f's/{{DEVICE_MODEL}}/{device_model}/g',
-        f's/{{SERIAL}}/{serial}/g',
-        f's/{{BOARD_SERIAL}}/{board_serial}/g',
-        f's/{{UUID}}/{uuid}/g',
-        f's/{{ROM}}/{rom}/g',
-        f's/{{WIDTH}}/{width}/g',
-        f's/{{HEIGHT}}/{height}/g',
-        f's/{{KERNEL_ARGS}}/{kernel_args}/g'
-    ]
-
-    # Construct the sed command with expressions and apply it to create a temporary config file
-    sed_command = ['sed']
-    for expr in sed_expressions:
-        sed_command.extend(['-e', expr])
-    sed_command.append(master_plist)
-
-    with open('./tmp.config.plist', 'w') as file:
-        subprocess.run(sed_command, stdout=file)
+    replacement = {
+        "{{DEVICE_MODEL}}": device_model,
+        "{{SERIAL}}": serial,
+        "{{BOARD_SERIAL}}": board_serial,
+        "{{UUID}}": uuid,
+        "{{ROM}}": rom,
+        "{{WIDTH}}": width,
+        "{{HEIGHT}}": height,
+        "{{KERNEL_ARGS}}": kernel_args
+    }
 
     with open('./tmp.config.plist', 'r') as file:
-        print(file.read())
+        plist = file.read()
+
+        for word, initial in replacement.items():
+            plist = plist.replace(word.lower(), initial)
+
+    with open('./tmp.config.plist', 'w') as file:
+        file.write(plist)
+
+    print(plist)
 
     imgNgPath = [
         './opencore-image-ng.sh',
