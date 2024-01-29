@@ -2,6 +2,7 @@ import os
 import subprocess
 import requests
 import argparse
+import shutil
 
 
 # URL to download the 'opencore-image-ng.sh' script
@@ -66,13 +67,17 @@ def generate_bootdisk(
     height=1080,
     kernel_args="",
     bootpath=None,
-    size='512GB'
+    size='512GB',
+    master_plist='./config-nopicker-sonoma.plist'
 ):
     if not bootpath:
         bootpath = f"./{serial}.OpenCore-nopicker.qcow2"
 
-    # Path to the master configuration plist file
-    master_plist = './config-custom.plist'
+    if not os.path.exists('./tmp.config.plist'):
+        shutil.copyfile(
+            master_plist,
+            './tmp.config.plist'
+        )
 
     # Check if the master plist file exists, if not, download it from a URL
     if not os.path.exists(master_plist):
