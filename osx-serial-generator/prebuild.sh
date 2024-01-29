@@ -5,3 +5,7 @@ make -C ./OpenCorePkg/Utilities/macserial/
     mv ./OpenCorePkg/Utilities/macserial/macserial .
     chmod +x ./macserial
     stat ./macserial
+
+mkdir -p ./resources/OcBinaryData/Resources/
+
+cp -r ./OSX-KVM/resources/OcBinaryData/Resources/ ./resources/OcBinaryData/Resources/
