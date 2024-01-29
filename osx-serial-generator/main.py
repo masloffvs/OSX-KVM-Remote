@@ -126,22 +126,6 @@ def generate_bootdisk(
 
 
 def main(args):
-    # Define the expected data types for each argument
-    arg_data_types = {
-        'device_model': str,
-        'serial': str,
-        'board_serial': str,
-        'uuid': str,
-        'mac_address': str
-    }
-
-    # Check if all required fields are present and have the correct data type
-    for arg_name, data_type in arg_data_types.items():
-        if arg_name not in args:
-            raise ValueError(f"Required argument '{arg_name}' is missing.")
-        if not isinstance(args[arg_name], data_type):
-            raise TypeError(f"Argument '{arg_name}' should be of type {data_type}.")
-
     # Extract arguments from the provided dictionary
     device_model = args['device_model']
     serial = args['serial']
