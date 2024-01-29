@@ -36,6 +36,7 @@ const basicAuth = require('express-basic-auth')
 const {PhantomFile} = require("./node-src/helpers/PhantomFile");
 const path = require("node:path");
 const audit = require('express-requests-logger')
+const {ImgCreator} = require("./node-src/helpers/ImgCreator");
 
 app.use(express.json());
 app.use(audit({
@@ -141,6 +142,7 @@ app.post('/api/vms/create', async (req, res) => {
 
 	const snapshotFilePath = process.cwd() + '/.snapshots/' + md5(name) + '.json'
 	const hddSrc = process.cwd() + `/disks/HDD-${md5(name)}.img`
+	const bootdiskSrc = process.cwd() + '/.cache/' + `bootdisk-${md5(name)}.qcow2`
 
 	if (fs.existsSync(snapshotFilePath)) {
 		return res.status(500).json({
@@ -166,9 +168,12 @@ app.post('/api/vms/create', async (req, res) => {
 	let optionsOfUniqMacHDD = null
 
 	if (!fs.existsSync(hddSrc)) {
-		optionsOfUniqMacHDD = await createRandomMacOSHDD(hddSrc)
+		optionsOfUniqMacHDD = await createRandomMacOSHDD(bootdiskSrc)
 	}
 
+	await (new ImgCreator(hddSrc, '256GB')).createImage()
+
+	fs.accessSync(bootdiskSrc)
 	fs.accessSync(hddSrc)
 
 	const ovmfCodeFile = new PhantomFile({path: process.cwd() + "/OVMF_CODE.fd"})
@@ -184,11 +189,19 @@ app.post('/api/vms/create', async (req, res) => {
 		false
 	)
 
+	const openCoreHDD = new VirtualDrive(
+		Infinity,
+		'qcow2',
+		'OpenCoreBoot',
+		bootdiskSrc,
+		undefined,
+		'none',
+		true
+	)
+
 	const opt = {
 		storageDevices: [
-			DiskLink
-				.openCoreBoot
-				.createGhostDrive(),
+			openCoreHDD,
 
 			DiskLink
 				.installMedia
