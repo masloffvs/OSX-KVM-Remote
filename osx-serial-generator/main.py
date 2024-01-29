@@ -66,6 +66,7 @@ def generate_bootdisk(
     height=1080,
     kernel_args="",
     bootpath=None,
+    size='512GB'
 ):
     if not bootpath:
         bootpath = f"./{serial}.OpenCore-nopicker.qcow2"
@@ -131,11 +132,12 @@ def main(args):
     serial = args.get('serial')
     board_serial = args.get('board_serial')
     uuid = args.get('uuid')
+    size = args.get('size')
     mac_address = args.get('mac_address')
     bootpath = args.get('bootpath')
 
     download_qcow_efi_folder()
-    generate_bootdisk(device_model, serial, board_serial, uuid, mac_address, bootpath=bootpath)
+    generate_bootdisk(device_model, serial, board_serial, uuid, mac_address, bootpath=bootpath, size=size)
 
 
 if __name__ == '__main__':
@@ -147,6 +149,7 @@ if __name__ == '__main__':
     parser.add_argument('--uuid', required=True, help="UUID")
     parser.add_argument('--mac_address', required=True, help="MAC address")
     parser.add_argument('--bootpath', required=True, help="Path to qcow2 disk out")
+    parser.add_argument('--size', required=True, help="qcow2 size")
 
     # Parse command-line arguments
     args = parser.parse_args()

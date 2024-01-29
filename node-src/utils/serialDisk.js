@@ -118,6 +118,7 @@ class SerialDisk {
 				    --serial "${SERIAL}" \
 				    --board_serial "${BOARD_SERIAL}" \
 				    --uuid "${UUID}" \
+				    --size "${size}" \
 				    --mac_address "${MAC_ADDRESS}" \
 				    --bootpath "${OUTPUT_QCOW}"`;
 

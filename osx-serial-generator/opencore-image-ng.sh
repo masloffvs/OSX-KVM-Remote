@@ -80,7 +80,7 @@ function fish_init() {
 	esac
 
 	msg "creating and adding disk image"
-	fish disk-create $img $format 384M
+	fish disk-create $img $format 512GB
 	fish add $img
 	fish run
 }
