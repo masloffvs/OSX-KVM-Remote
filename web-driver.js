@@ -111,6 +111,25 @@ app.get('/api/resources/snapshots/list', async (req, res) => {
 	res.json(files)
 });
 
+app.get('/api/vms/:name/stdout', (req, res) => {
+	const name = req.params.name;
+	const filePath = process.cwd() + `/.cache/stdout_${md5(name)}.log`
+
+	if (!fs.existsSync(filePath)) {
+		res.set('Content-Type', 'text/html');
+		res.status(404)
+
+		return res.send(`VM '${name}' not found`);
+	}
+
+	const stdout = String(fs.readFileSync(filePath))
+
+	res.set('Content-Type', 'text/html');
+	res.status(200)
+
+	return res.send(stdout);
+});
+
 app.post('/api/vms/create', async (req, res) => {
 	const { name, version } = req.body;
 
@@ -277,25 +296,6 @@ app.post('/api/vms/:name/start', (req, res) => {
 			process: i
 		})
 	})
-});
-
-app.get('/api/vms/:name/stdout', (req, res) => {
-	const name = req.params.name;
-	const filePath = process.cwd() + `/.cache/stdout_${md5(name)}.log`
-
-	if (!fs.existsSync(filePath)) {
-		res.set('Content-Type', 'text/html');
-		res.status(404)
-
-		return res.send(`VM '${name}' not found`);
-	}
-
-	const stdout = String(fs.readFileSync(filePath))
-
-	res.set('Content-Type', 'text/html');
-	res.status(200)
-
-	return res.send(stdout);
 });
 
 app.post('/api/vms/:name/stop', (req, res) => {

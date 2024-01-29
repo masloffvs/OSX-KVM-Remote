@@ -113,16 +113,13 @@ class SerialDisk {
 				return new Promise((resolve, reject) => {
 					logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`)
 
-					// Generate the bootdisk here...
-					const createImageCommand = `./generate-specific-bootdisk.sh \
-			    --model "${DEVICE_MODEL}" \
-			    --serial "${SERIAL}" \
-			    --board-serial "${BOARD_SERIAL}" \
-			    --uuid "${UUID}" \
-			    --mac-address "${MAC_ADDRESS}" \
-			    --output-bootdisk "${OUTPUT_QCOW}" \
-			    --width ${WIDTH} \
-			    --height ${HEIGHT}`;
+					const createImageCommand = `python3 main.py \
+				    --device_model "${DEVICE_MODEL}" \
+				    --serial "${SERIAL}" \
+				    --board_serial "${BOARD_SERIAL}" \
+				    --uuid "${UUID}" \
+				    --mac_address "${MAC_ADDRESS}" \
+				    --bootpath "${OUTPUT_QCOW}"`;
 
 					try {
 						const child = exec(
@@ -146,6 +143,7 @@ class SerialDisk {
 							if (code === 0) {
 								logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`)
 							} else {
+								console.error({code, signal})
 								reject(null)
 							}
 						})
