@@ -22,7 +22,28 @@ if sudo -v; then
 
       # Installing QEMU
       echo "[APT_INSTALL]: Installing QEMU..."
-      sudo apt install qemu -y
+
+      # Check the operating system
+      if [[ -e /etc/debian_version ]]; then
+          # If it's Debian, try to install QEMU from backports
+          echo "[APT_INSTALL]: Detected Debian. Attempting to install QEMU from backports..."
+          sudo echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/backports.list
+          sudo apt update
+          sudo apt install -t buster-backports qemu -y
+      else
+          # If it's Ubuntu, install QEMU from official repositories
+          echo "[APT_INSTALL]: Detected Ubuntu. Installing QEMU from official repositories..."
+          sudo apt install qemu -y
+      fi
+
+      # Check if QEMU installation was successful
+      if [ $? -eq 0 ]; then
+          echo "[SUCCESS]: QEMU has been successfully installed."
+      else
+          # If installation failed, display an error message and exit
+          echo "[ERROR]: Failed to install QEMU."
+          exit 1
+      fi
     fi
 
     # Checking Node.js version
