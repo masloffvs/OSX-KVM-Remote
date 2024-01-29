@@ -99,6 +99,8 @@ if sudo -v; then
     chmod +x prebuild.sh
     chmod +x install.sh
     chmod +x get.sh
+    chmod +x thanks.sh
+    chmod +x run-server.sh
 
     # Prebuild all BaseSystem.img
     ./prebuild.sh
@@ -110,6 +112,10 @@ if sudo -v; then
     echo "[RUN_PREBUILT_SCRIPT]: Running prebuild.sh..."
     chmod +x prebuild.sh
     ./prebuild.sh
+
+    cd .. || exit
+
+    ./thanks.sh
 
 else
     echo "Incorrect sudo password. Exiting..."
