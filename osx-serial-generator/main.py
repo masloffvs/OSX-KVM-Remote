@@ -132,9 +132,10 @@ def main(args):
     board_serial = args.get('board_serial')
     uuid = args.get('uuid')
     mac_address = args.get('mac_address')
+    bootpath = args.get('bootpath')
 
     download_qcow_efi_folder()
-    generate_bootdisk(device_model, serial, board_serial, uuid, mac_address)
+    generate_bootdisk(device_model, serial, board_serial, uuid, mac_address, bootpath=bootpath)
 
 
 if __name__ == '__main__':
@@ -145,6 +146,7 @@ if __name__ == '__main__':
     parser.add_argument('--board_serial', required=True, help="Board serial number")
     parser.add_argument('--uuid', required=True, help="UUID")
     parser.add_argument('--mac_address', required=True, help="MAC address")
+    parser.add_argument('--bootpath', required=True, help="Path to qcow2 disk out")
 
     # Parse command-line arguments
     args = parser.parse_args()
