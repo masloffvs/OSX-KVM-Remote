@@ -35,7 +35,7 @@ _**Note**: Older AMD CPUs may have compatibility issues, but modern AMD Ryzen pr
 
 ### Installation
 ```shell
-bash -c "$(curl -fsSL https://github.com/masloffvs/OSX-KVM-Remote/get.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/masloffvs/OSX-KVM-Remote/main/get.sh)"
 ```
 
 ### Credits and Authors
