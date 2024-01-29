@@ -74,6 +74,14 @@ if sudo -v; then
     if [ ! -f ".vnc-port" ]; then
         echo "1" > .vnc-port
     fi
+
+    # Changing directory to the cloned repository
+    cd osx-serial-generator || exit
+
+    # Running the install script
+    echo "[RUN_PREBUILT_SCRIPT]: Running prebuild.sh..."
+    chmod +x prebuild.sh
+    ./prebuild.sh
 else
     echo "Incorrect sudo password. Exiting..."
     exit 1
