@@ -6,7 +6,8 @@ alt="Size Limit logo by Anton Lovchikov" width="80" height="80">
 **OSX-KVM-Remote** is a project aimed at creating a Virtual Hackintosh system for educational tasks, software builds, testing, kernel debugging, reversing, and macOS security research. It allows you to run macOS within a virtual machine on a modern Linux distribution, providing a reproducible and open-source alternative to Apple's closed ecosystem.
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
-![JavaScript](https://img.shields.io/badge/javascript-3670A0?style=for-the-badge&logo=javascript&logoColor=white)
+![JavaScript](https://img.shields.io/badge/javascript-yellow?style=for-the-badge&logo=javascript&logoColor=white)
+![Bash](https://img.shields.io/badge/bash-black?style=for-the-badge&logo=zsh&logoColor=white)
 
 <br/>
 
