@@ -106,7 +106,7 @@ def generate_bootdisk(
         plist = file.read()
 
         for word, initial in replacement.items():
-            plist = plist.replace(word.lower(), initial)
+            plist = plist.replace(str(word), str(initial))
 
     with open('./tmp.config.plist', 'w') as file:
         file.write(plist)
