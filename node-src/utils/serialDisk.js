@@ -114,7 +114,7 @@ class SerialDisk {
 					logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`)
 
 					// Generate the bootdisk here...
-					const createImageCommand = `./generate-unique-machine-values.sh \
+					const createImageCommand = `./generate-specific-bootdisk.sh \
 			    --model "${DEVICE_MODEL}" \
 			    --serial "${SERIAL}" \
 			    --board-serial "${BOARD_SERIAL}" \
