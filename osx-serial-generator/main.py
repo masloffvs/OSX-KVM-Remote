@@ -36,18 +36,20 @@ def print_node(node, indent=0):
 def parse_plist_for_platform_info(xml_data):
     print("PlatformInfo:")
     # Parse the XML data into an ElementTree object
-    root = ET.fromstring(xml_data)
-    inside_platform_info = False
+    try:
+        root = ET.fromstring(xml_data)
+        inside_platform_info = False
 
-    for child in root.iter():
-        if child.tag == "key" and child.text == "PlatformInfo":
-            # If we find a "PlatformInfo" key, set a flag to indicate we are inside it
-            inside_platform_info = True
-        elif child.tag == "dict" and inside_platform_info:
-            # If we are inside "PlatformInfo" and find a dictionary, start printing its contents
-            print_node(child, 1)
-            break  # Exit the loop after printing the first dictionary
-
+        for child in root.iter():
+            if child.tag == "key" and child.text == "PlatformInfo":
+                # If we find a "PlatformInfo" key, set a flag to indicate we are inside it
+                inside_platform_info = True
+            elif child.tag == "dict" and inside_platform_info:
+                # If we are inside "PlatformInfo" and find a dictionary, start printing its contents
+                print_node(child, 1)
+                break  # Exit the loop after printing the first dictionary
+    except:
+        print("Unfortunately, this plist cannot be visualized")
 
 # This function is responsible for downloading an EFI folder required for running macOS on a KVM virtual machine.
 # It first checks if the 'EFI' folder already exists locally. If not, it proceeds to clone the 'OSX-KVM' repository.
