@@ -102,6 +102,8 @@ def generate_bootdisk(
         "{{KERNEL_ARGS}}": kernel_args
     }
 
+    print(replacement)
+
     with open('./tmp.config.plist', 'r') as file:
         plist = file.read()
 
