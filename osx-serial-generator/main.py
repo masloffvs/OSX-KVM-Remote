@@ -158,7 +158,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print(vars(args))
-    exit(1)
 
     # Call the main function with the parsed arguments
     main(vars(args))
