@@ -87,11 +87,34 @@ function generateMacAddress() {
 }
 
 
+/**
+ * Represents a class for creating a serial disk image.
+ */
 class SerialDisk {
+	/**
+	 * Create a new instance of the SerialDisk class.
+	 * @param {Object} options - The options for configuring the serial disk creation.
+	 * @param {string} options.DEVICE_MODEL - The device model.
+	 * @param {string} options.SERIAL - The serial number.
+	 * @param {string} options.BOARD_SERIAL - The board serial number.
+	 * @param {string} options.UUID - The UUID.
+	 * @param {string} options.MAC_ADDRESS - The MAC address.
+	 * @param {number} [options.WIDTH=1920] - The width of the image.
+	 * @param {number} [options.HEIGHT=1080] - The height of the image.
+	 * @param {string} [options.KERNEL_ARGS=''] - Additional kernel arguments.
+	 * @param {string} [options.MASTER_PLIST_URL='https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-nopicker-custom.plist'] - The URL to the master plist file.
+	 * @param {string} options.MASTER_PLIST - The master plist.
+	 * @param {string} [options.OUTPUT_QCOW='./{SERIAL}.OpenCore-nopicker.qcow2'] - The output QCOW image path.
+	 */
 	constructor(options) {
 		this.options = options;
 	}
 
+	/**
+	 * Create a serial disk image with the specified size.
+	 * @param {string} [size='256G'] - The size of the serial disk image.
+	 * @returns {Promise<void>} - A promise that resolves when the image is created successfully.
+	 */
 	async createImage(size = '256G') {
 		try {
 			const {
@@ -111,16 +134,16 @@ class SerialDisk {
 			// Function to generate the bootdisk
 			const generateBootdisk = () => {
 				return new Promise((resolve, reject) => {
-					logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`)
+					logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`);
 
 					const createImageCommand = `python3 main.py \
-				    --device_model "${DEVICE_MODEL}" \
-				    --serial "${SERIAL}" \
-				    --board_serial "${BOARD_SERIAL}" \
-				    --uuid "${UUID}" \
-				    --size "${size}" \
-				    --mac_address "${MAC_ADDRESS}" \
-				    --bootpath "${OUTPUT_QCOW}"`;
+            --device_model "${DEVICE_MODEL}" \
+            --serial "${SERIAL}" \
+            --board_serial "${BOARD_SERIAL}" \
+            --uuid "${UUID}" \
+            --size "${size}" \
+            --mac_address "${MAC_ADDRESS}" \
+            --bootpath "${OUTPUT_QCOW}"`;
 
 					try {
 						const child = exec(
@@ -128,32 +151,32 @@ class SerialDisk {
 							{ cwd: `${process.cwd()}/osx-serial-generator` },
 							(error, stdout, stderr) => {
 								if (error) {
-									reject(error)
+									reject(error);
 								}
 							}
-						)
+						);
 
-						child.stdout.pipe(process.stdout)
-						child.stdin.pipe(process.stdin)
+						child.stdout.pipe(process.stdout);
+						child.stdin.pipe(process.stdin);
 
 						child.on('error', function (error) {
-							reject(error)
-						})
+							reject(error);
+						});
 
-						child.on('exit', function(code, signal) {
+						child.on('exit', function (code, signal) {
 							if (code === 0) {
-								logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`)
-								resolve()
+								logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`);
+								resolve();
 							} else {
-								console.error({code, signal})
-								reject(null)
+								console.error({ code, signal });
+								reject(null);
 							}
-						})
+						});
 					} catch (error) {
-						reject(error)
-						logger.error(`💽 Error creating the image: ${error}`)
+						reject(error);
+						logger.error(`💽 Error creating the image: ${error}`);
 					}
-				})
+				});
 			};
 
 			await generateBootdisk();
@@ -181,6 +204,10 @@ module.exports = {
 	async createRandomMacOSHDD(path) {
 		const uniqueOptions = generateUniqueValues(options);
 		const finalOptions = {...uniqueOptions, OUTPUT_QCOW: path}
+
+		if (fs.existsSync(path)) {
+			throw "the disk file already exists and cannot be specified as a virtual disk file"
+		}
 
 		const imgCreator = new SerialDisk(finalOptions);
 
