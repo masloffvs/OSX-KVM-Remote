@@ -28,11 +28,13 @@ if [[ "$(uname)" == "Darwin" ]]; then
   python_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')
 else
   # Ubuntu and Debian
-  python_version=$(python3 -V 2>&1 | grep -oP '(?<=Python )(\d+\.\d+\.\d+)')
+  python_version=$(python3 --version 2>&1 | grep -oP '(?<=Python )(\d+\.\d+\.\d+)')
 fi
 
-if [[ "$python_version" < "3.8.0" ]]; then
-  echo -e "${RED}[ERROR]: Python version must be at least 3.8.${NC}"
+required_python_version="3.8" # Minimum required Python version
+
+if python3 -c "import sys; exit(sys.version_info < ($required_python_version,))"; then
+  echo -e "${RED}[ERROR]: Python version must be at least $required_python_version.${NC}"
   exit 1
 else
   echo "[SUCCESS]: Python version is $python_version"
