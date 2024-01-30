@@ -95,4 +95,8 @@ pm2 start web-driver.js --name WebDriverHypervisor
 pm2 save
 pm2 startup
 
+# Show the latest logs from PM2 without blocking input
+echo -e "${GREEN}[PM2_LOGS]: Showing the latest logs from PM2...${NC}"
+pm2 logs --lines 38
+
 echo -e "${GREEN}[SUCCESS]: Setup completed successfully.${NC}"
