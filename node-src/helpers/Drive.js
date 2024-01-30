@@ -97,6 +97,7 @@ class VirtualDrive extends Drive {
 	 * @param {string} [if_='none'] - The interface type for the virtual drive (e.g., 'ide', 'scsi', 'virtio', 'none').
 	 * @param {boolean} [snapshot=true] - The snapshot mode for the virtual drive (bool).
 	 * @param bootindex
+	 * @param serial
 	 */
 	constructor(
 		size,
@@ -106,7 +107,8 @@ class VirtualDrive extends Drive {
 		id = undefined,
 		if_ = 'none',
 		snapshot = true,
-		bootindex = null
+		bootindex = null,
+		serial = generateHardDiskID(20)
 	) {
 		super(size, format, label);
 
@@ -142,6 +144,7 @@ class VirtualDrive extends Drive {
 		this.id = id || label || generateHardDiskID();
 		this.snapshot = snapshot ? 'on' : 'off';
 		this.bootindex = bootindex;
+		this.serial = serial;
 
 		if (!['ide', 'scsi', 'virtio', 'none'].includes(if_)) {
 			throw "exit"
@@ -178,7 +181,7 @@ class VirtualDrive extends Drive {
 	 * @returns {string} QEMU drive configuration string.
 	 */
 	getQemuDriveConfig() {
-		return `-drive id='${this.id || 'ra'}',format=${this.format},if=${this.if_},snapshot=${this.snapshot},file=${this.path}${this.bootindex ? `,bootindex=${this.bootindex}` : ''}`;
+		return `-drive id='${this.id || 'ra'}',format=${this.format},if=${this.if_},snapshot=${this.snapshot},file=${this.path}${this.bootindex ? `,bootindex=${this.bootindex},serial=${this.serial}` : ''}`;
 	}
 }
 
