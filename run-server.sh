@@ -6,6 +6,17 @@ RED='\033[1;31m'
 PURPLE='\033[1;35m'
 NC='\033[0m' # No Color
 
+# Function to check if PM2 is installed and install it if not
+check_and_install_pm2() {
+  if ! command -v pm2 &> /dev/null; then
+    echo -e "${GREEN}[INSTALL_PM2]: PM2 is not installed. Installing PM2...${NC}"
+    npm install -g pm2
+    pm2 update
+  else
+    echo "[SUCCESS]: PM2 is already installed."
+  fi
+}
+
 # Function to prompt the user to kill the port
 ask_to_kill_port() {
   read -p "Port 3000 is already in use. Do you want to kill the process using 'npx kill-port 3000'? (y/n): " choice
@@ -52,6 +63,9 @@ else
   echo "[SUCCESS]: Python version is $python_version"
 fi
 
+# Check if PM2 is installed and install it if not
+check_and_install_pm2
+
 # Check if required image files exist
 echo -e "${GREEN}[CHECK_IMAGE_FILES]: Checking for required image files...${NC}"
 required_images=("BaseSystem-BigSur.img" "BaseSystem-Catalina.img" "BaseSystem-Monterey.img" "BaseSystem-Sonoma.img" "BaseSystem-Ventura.img")
@@ -91,6 +105,7 @@ fi
 
 # Start web-driver.js with pm2
 echo -e "${GREEN}[START_WEB_DRIVER]: Starting web-driver.js with pm2...${NC}"
+pm2 delete WebDriverHypervisor
 pm2 start web-driver.js --name WebDriverHypervisor
 pm2 save
 pm2 startup
