@@ -97,6 +97,6 @@ pm2 startup
 
 # Show the latest logs from PM2 without blocking input
 echo -e "${GREEN}[PM2_LOGS]: Showing the latest logs from PM2...${NC}"
-pm2 logs --lines 38
+pm2 logs WebDriverHypervisor --lines 38 --nostream
 
 echo -e "${GREEN}[SUCCESS]: Setup completed successfully.${NC}"
