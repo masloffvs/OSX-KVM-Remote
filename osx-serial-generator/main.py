@@ -107,7 +107,7 @@ def generate_bootdisk(
     kernel_args="",
     bootpath=None,
     size='512GB',
-    master_plist='./config-nopicker-sonoma.plist'
+    master_plist='./config-custom.plist'
 ):
     if not bootpath:
         bootpath = f"./{serial}.OpenCore-nopicker.qcow2"
