@@ -12,13 +12,13 @@ class ImgCreator {
 	}
 
 	async createImage() {
-		logger.log(`💾 HDD ${this.filename} creating`);
+		logger.info(`💾 HDD ${this.filename} creating`);
 
 		const createImageCommand = `qemu-img create -f qcow2 ${this.filename} ${this.size}`;
 
 		try {
 			const { stdout, stderr } = await execPromise(createImageCommand);
-			logger.log(`💾 HDD ${this.filename} created`);
+			logger.info(`💾 HDD ${this.filename} created`);
 		} catch (error) {
 			logger.error(`💾 not created: ${error}`);
 		}
