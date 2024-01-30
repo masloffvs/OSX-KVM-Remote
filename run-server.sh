@@ -6,6 +6,18 @@ RED='\033[1;31m'
 PURPLE='\033[1;35m'
 NC='\033[0m' # No Color
 
+# Function to prompt the user to kill the port
+ask_to_kill_port() {
+  read -p "Port 3000 is already in use. Do you want to kill the process using 'npx kill-port 3000'? (y/n): " choice
+  if [[ "$choice" == "y" ]]; then
+    echo -e "${GREEN}[KILL_PORT]: Killing port 3000 using 'npx kill-port 3000'...${NC}"
+    npx kill-port 3000
+  else
+    echo -e "${RED}[ERROR]: Port 3000 is already in use.${NC}"
+    exit 1
+  fi
+}
+
 # Function to check if a command is available
 check_command() {
   command -v $1 >/dev/null 2>&1 || { echo -e "[ERROR]: $1 is not installed.${NC}"; exit 1; }
@@ -72,15 +84,14 @@ check_command "qemu-system-x86_64"
 # Check if port 3000 is available
 echo -e "${GREEN}[CHECK_PORT_AVAILABILITY]: Checking port 3000...${NC}"
 if nc -z -w1 localhost 3000; then
-  echo -e "${RED}[ERROR]: Port 3000 is already in use.${NC}"
-  exit 1
+  ask_to_kill_port
 else
   echo "[SUCCESS]: Port 3000 is available"
 fi
 
 # Start web-driver.js with pm2
 echo -e "${GREEN}[START_WEB_DRIVER]: Starting web-driver.js with pm2...${NC}"
-pm2 start web-driver.js
+pm2 start web-driver.js --name WebDriverHypervisor
 pm2 save
 pm2 startup
 
