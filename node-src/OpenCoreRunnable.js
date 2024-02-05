@@ -5,7 +5,7 @@ class QemuOpenCoreRunnable {
 
 	/**
 	 * Create a new instance of the QemuOpenCoreRunnable class.
-	 * @param {Object} options - Configuration options for the virtual machine.
+	 * @param {{storageDevices: VirtualDrive[], kvm: boolean, networkDevices: NetDeviceWithMultiplyForward[], otherArgs: string[], nographic: boolean, customDeviceParams: string[]}} options - Configuration options for the virtual machine.
 	 * @param {string} [options.allocatedRam='7192'] - The amount of allocated RAM in MiB.
 	 * @param {function} [options.onStdoutData]
 	 * @param {function} [options.onStdinData]
