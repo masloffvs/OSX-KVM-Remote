@@ -192,7 +192,7 @@ app.post('/api/vms/create', async (req, res) => {
 		_.get(
 			config,
 			'defaultMacStorageSize',
-			'256GB'
+			'256G'
 		)
 	)
 
