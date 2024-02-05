@@ -1,4 +1,5 @@
 const {VirtualDrive} = require("./helpers/Drive");
+const path = require("node:path");
 
 const openCoreBoot = new VirtualDrive(
 	Infinity,
@@ -9,17 +10,29 @@ const openCoreBoot = new VirtualDrive(
 	'none'
 );
 
-const installMedia = new VirtualDrive(
+const installSonomaMedia = new VirtualDrive(
 	Infinity,
 	'raw',
 	'InstallMedia',
-	process.cwd() + '/prebuilt/basesystems/BaseSystem-Sonoma.img',
+	path.normalize(process.cwd() + '/prebuilt/basesystems/BaseSystem-Sonoma.img'),
+	undefined,
+	'none',
+	false
+);
+
+const installVenturaMedia = new VirtualDrive(
+	Infinity,
+	'raw',
+	'InstallMedia',
+	path.normalize(process.cwd() + '/prebuilt/basesystems/BaseSystem-Ventura.img'),
 	undefined,
 	'none',
 	false
 );
 
 module.exports = {
-	installMedia,
+	installSonomaMedia,
+	installVenturaMedia,
+
 	openCoreBoot
 }
