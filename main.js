@@ -13,7 +13,7 @@ const qemuOpenCoreRunnable = new QemuOpenCoreRunnable({
 	],
 	storageDevices: [
 		DiskLink.openCoreBoot,
-		DiskLink.installMedia
+		DiskLink.installSonomaMedia
 	],
 	customDeviceParams: [
 		driverDevice('isa-applesmc', { osk: 'ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc' }),
