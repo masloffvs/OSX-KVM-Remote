@@ -16,5 +16,16 @@ module.exports = {
  	 	} else {
 			logger.debug(`folder '${folder}' passed`)
 		}
+	},
+
+	// Function to check if a file exists
+	checkFileExists(filePath) {
+		if (fs.existsSync(filePath)) {
+			logger.debug(`file '${filePath}' exists.`);
+			return true;
+		} else {
+			logger.debug(`file '${filePath}' does not exist.`);
+			return false;
+		}
 	}
 }
