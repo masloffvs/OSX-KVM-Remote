@@ -10,8 +10,13 @@ console.log('  - https://github.com/kholia/OSX-KVM')
 console.log('  - https://github.com/sickcodes/Docker-OSX')
 console.log('')
 
-const {createFolderIfNotExists} = require("./node-src/boot");
+const {createFolderIfNotExists, checkFileExists} = require("./node-src/boot");
 const {workers} = require("./node-src/workers");
+
+checkFileExists(process.cwd() + "/OVMF_VARS-1024x768.fd")
+checkFileExists(process.cwd() + "/OVMF_CODE.fd")
+checkFileExists(process.cwd() + "/.vnc-port")
+checkFileExists(process.cwd() + "/hypervisor.json")
 
 createFolderIfNotExists('.cache')
 createFolderIfNotExists('.snapshots')
@@ -37,6 +42,9 @@ const {PhantomFile} = require("./node-src/helpers/PhantomFile");
 const path = require("node:path");
 const audit = require('express-requests-logger')
 const {ImgCreator} = require("./node-src/helpers/ImgCreator");
+const _ = require("lodash");
+
+const config = JSON.parse(String(fs.readFileSync(process.cwd() + "/hypervisor.json")))
 
 app.use(express.json());
 app.use(audit({
@@ -44,6 +52,8 @@ app.use(audit({
 }))
 
 app.use('/public', express.static(process.cwd() + '/node-src/public'))
+
+
 
 if (fs.existsSync(process.cwd() + "/http.json")) {
 	const httpConf = JSON.parse(String(fs.readFileSync(process.cwd() + "/http.json")))
@@ -134,15 +144,21 @@ app.get('/api/vms/:name/stdout', (req, res) => {
 app.post('/api/vms/create', async (req, res) => {
 	const { name, version } = req.body;
 
+	const snapshotFilePath = path.normalize(process.cwd() + '/.snapshots/' + md5(name) + '.json')
+	const hddSrc = path.normalize(process.cwd() + `/disks/HDD-${md5(name)}.img`)
+	const bootdiskSrc = path.normalize(process.cwd() + `/.cache/bootdisk-${md5(name)}.qcow2`)
+
+	if (!['ventura', 'sonoma'].includes(version)) {
+		return res.status(400).json({
+			error: `this generation (${version}) of virtual machines is not supported`
+		})
+	}
+
 	if (!/^[a-zA-Z]+$/.test(name)) {
 		return res.status(400).json({
 			error: `virtual machine name is incorrect. it can be specified exclusively in English characters, without special characters, spaces or numbers`
 		})
 	}
-
-	const snapshotFilePath = process.cwd() + '/.snapshots/' + md5(name) + '.json'
-	const hddSrc = process.cwd() + `/disks/HDD-${md5(name)}.img`
-	const bootdiskSrc = process.cwd() + '/.cache/' + `bootdisk-${md5(name)}.qcow2`
 
 	if (fs.existsSync(snapshotFilePath)) {
 		return res.status(500).json({
@@ -171,45 +187,31 @@ app.post('/api/vms/create', async (req, res) => {
 		optionsOfUniqMacHDD = await createRandomMacOSHDD(bootdiskSrc)
 	}
 
-	await (new ImgCreator(hddSrc, '256G')).createImage()
+	const imageCreator = new ImgCreator(
+		hddSrc,
+		_.get(
+			config,
+			'defaultMacStorageSize',
+			'256GB'
+		)
+	)
+
+	await imageCreator.createImage()
 
 	fs.accessSync(bootdiskSrc)
 	fs.accessSync(hddSrc)
 
-	const ovmfCodeFile = new PhantomFile({path: process.cwd() + "/OVMF_CODE.fd"})
-	const ovmfVars1024x768File = new PhantomFile({path: process.cwd() + "/OVMF_VARS-1024x768.fd"})
-
-	const hddForMacData = new VirtualDrive(
-		Infinity,
-		'qcow2',
-		'MacHDD',
-		hddSrc,
-		undefined,
-		'none',
-		false
-	)
-
-	const openCoreHDD = new VirtualDrive(
-		Infinity,
-		'qcow2',
-		'OpenCoreBoot',
-		bootdiskSrc,
-		undefined,
-		'none',
-		true
-	)
+	// const openCoreHDD = new VirtualDrive(
+	// 	Infinity,
+	// 	'qcow2',
+	// 	'OpenCoreBoot',
+	// 	bootdiskSrc,
+	// 	undefined,
+	// 	'none',
+	// 	true
+	// )
 
 	const opt = {
-		storageDevices: [
-			openCoreHDD,
-
-			DiskLink
-				.installMedia
-				.createGhostDrive(),
-
-			hddForMacData
-		],
-
 		onStdoutData: function (byte) {
 			fs.appendFileSync(process.cwd() + `/.cache/stdout_${md5(name)}.log`, byte)
 		},
@@ -219,30 +221,28 @@ app.post('/api/vms/create', async (req, res) => {
 		},
 
 		...vncDisplayArguments(vncArgs),
-
-		otherArgs: [
-			`-drive if=pflash,format=raw,file="${ovmfCodeFile.createTempPersistentFile()}"`,
-			`-drive if=pflash,format=raw,file="${ovmfVars1024x768File.createTempPersistentFile()}"`,
-
-			`-device ide-hd,bus=sata.4,drive=${hddForMacData.id || hddForMacData.label}`,
-			'-smbios type=2'
-		]
 	}
 
 	let proc
 
 	switch (version) {
 		case 'sonoma':
-			proc = Machine.sonoma(opt)
+			proc = Machine.sonoma(opt, hddSrc)
+			break;
+
+		case 'ventura':
+			proc = Machine.ventura(opt, hddSrc)
+			break;
+
+		default:
+			throw "Unsupported OS version"
 	}
 
 	fs.writeFileSync(
 		snapshotFilePath,
 		JSON.stringify({
 			creationDate: new Date(),
-			userDisks: [
-				hddForMacData
-			],
+
 			snapshotFilePath,
 			vncArgs,
 			optionsOfUniqMacHDD,
