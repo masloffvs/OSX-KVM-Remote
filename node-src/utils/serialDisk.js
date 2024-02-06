@@ -151,7 +151,7 @@ class SerialDisk {
             --mac_address "${MAC_ADDRESS}" \
             --bootpath "${OUTPUT_QCOW}"`;
 
-					logger.info(createImageCommand)
+					logger.info(createImageCommand.replace("             ", " "))
 
 					try {
 						const child = exec(
