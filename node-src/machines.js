@@ -144,7 +144,7 @@ module.exports = {
 			if (!path.isAbsolute(diskDrive)) {
 				throw new Throwable(
 					"The path to the bootloader disk is not absolute",
-					this.sonoma,
+					this.ventura,
 					{}
 				)
 			}
@@ -153,7 +153,7 @@ module.exports = {
 
 			const openCoreDisk = await spawnBootableDiskWithUniqData(
 				path.normalize(bootableDiskDrive),
-				MASTER_PLISTS.sonoma
+				MASTER_PLISTS.ventura
 			)
 
 			const opt = Object.assign({
