@@ -151,6 +151,8 @@ class SerialDisk {
             --mac_address "${MAC_ADDRESS}" \
             --bootpath "${OUTPUT_QCOW}"`;
 
+					logger.info(createImageCommand)
+
 					try {
 						const child = exec(
 							createImageCommand.trim(),
@@ -213,7 +215,7 @@ module.exports = {
 		const finalOptions = {
 			...uniqueOptions,
 
-			MASTER_PLIST: MASTER_PLISTS.sonoma,
+			MASTER_PLIST: masterPlist,
 			OUTPUT_QCOW: path
 		}
 

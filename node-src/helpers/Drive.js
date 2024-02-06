@@ -139,7 +139,6 @@ class VirtualDrive extends Drive {
 
 		fs.accessSync(this.path); // Ensure the file at 'path' exists
 
-
 		this.if_ = if_;
 		this.id = id || label || generateHardDiskID();
 		this.snapshot = snapshot ? 'on' : 'off';

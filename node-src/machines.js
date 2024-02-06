@@ -59,6 +59,7 @@ async function spawnBootableDiskWithUniqData(
 	}
 
 	optionsOfUniqMacHDD = await createRandomMacOSHDD(pathToDisk, materPlist)
+
 	fs.accessSync(pathToDisk, R_OK)
 
 	const openCoreBoot = new VirtualDrive(
@@ -69,7 +70,6 @@ async function spawnBootableDiskWithUniqData(
 		undefined,
 		'none'
 	);
-
 
 	return {
 		optionsOfUniqMacHDD,
