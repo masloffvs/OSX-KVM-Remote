@@ -1,4 +1,5 @@
-
+const disk = require('diskusage');
+const os = require('node:os');
 const {Machine} = require("./machines");
 const {vncDisplayArguments, MACHINE_HOST} = require("./helpers/VncDisplay");
 const express = require('express');
@@ -17,6 +18,8 @@ const {ImgCreator} = require("./helpers/ImgCreator");
 const _ = require("lodash");
 const Ajv = require("ajv")
 const {config} = require("./config");
+const os = require("node:os");
+const disk = require("diskusage");
 
 const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
 
@@ -116,6 +119,9 @@ app.get('/api/vms/:name/stdout', (req, res) => {
 app.post('/api/vms/create', async (req, res) => {
 	const { name, version } = req.body;
 
+	const info = disk.checkSync(os.platform() === 'win32' ? 'c:' : '/');
+	const freeInGB = info.free / 1024 / 1024 / 1024
+
 	const snapshotFilePath = path.normalize(process.cwd() + '/.snapshots/' + md5(name) + '.json')
 	const hddSrc = path.normalize(process.cwd() + `/data/hdd/DATA_${name}.img`)
 	const bootdiskSrc = path.normalize(process.cwd() + `/data/bootable/BOOT_${name}.qcow2`)
@@ -131,6 +137,15 @@ app.post('/api/vms/create', async (req, res) => {
 			error: `virtual machine name is incorrect. it can be specified exclusively in English characters, without special characters, spaces or numbers`
 		})
 	}
+
+	if (freeInGB < _.get(config, 'reservedSize.min', 30)) {
+		logger.error("attention! There is not enough space on your device to create a virtual disk")
+
+		return res.status(500).json({
+			error: `there is not enough free space on the device to create and then fill a hard disk. need ${_.get(config, 'reservedSize.min', 30)}GB, you have ${freeInGB}GB`
+		});
+	}
+
 
 	if (fs.existsSync(snapshotFilePath)) {
 		return res.status(500).json({

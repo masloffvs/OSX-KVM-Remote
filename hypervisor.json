@@ -1,5 +1,10 @@
 {
   "defaultMacStorageSize": "256G",
+  "reservedSize": {
+    "min": 30,
+    "mean": 120,
+    "max": 256
+  },
   "vncEveryNewInstanceStep": 1,
   "plists": [
     "config-custom.plist",
