@@ -95,6 +95,9 @@ check_command "pm2"
 # Check if qemu is installed
 check_command "qemu-system-x86_64"
 
+# Check if killall is installed
+check_command "killall"
+
 # Check if port 3000 is available
 echo -e "${GREEN}[CHECK_PORT_AVAILABILITY]: Checking port 3000...${NC}"
 if nc -z -w1 localhost 3000; then
@@ -102,6 +105,9 @@ if nc -z -w1 localhost 3000; then
 else
   echo "[SUCCESS]: Port 3000 is available"
 fi
+
+# kill all qemu instances
+sudo killall qemu-system-x86_64
 
 # Start web-driver.js with pm2
 echo -e "${GREEN}[START_WEB_DRIVER]: Starting web-driver.js with pm2...${NC}"
