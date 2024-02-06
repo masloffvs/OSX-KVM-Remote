@@ -96,6 +96,7 @@ if sudo -v; then
     mkdir -p prebuilt/basesystems
     mkdir -p .cache
     mkdir -p .snapshots
+    mkdir -p .tty
     mkdir -p disks
 
     # Creating .vnc-port file if it doesn't exist with content "1"
