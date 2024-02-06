@@ -118,12 +118,6 @@ def generate_bootdisk(
             './tmp.config.plist'
         )
 
-    # Check if the master plist file exists, if not, download it from a URL
-    if not os.path.exists(master_plist):
-        response = requests.get(MASTER_PLIST_URL)
-        with open(master_plist, 'wb') as file:
-            file.write(response.content)
-
     # Check if the 'opencore-image-ng.sh' script exists, if not, download and make it executable
     if not os.path.exists('./opencore-image-ng.sh'):
         response = requests.get(OPENCORE_IMAGE_MAKER_URL)
@@ -183,9 +177,10 @@ def main(args):
     size = args.get('size')
     mac_address = args.get('mac_address')
     bootpath = args.get('bootpath')
+    master_plist = args.get('master_plist')
 
     download_qcow_efi_folder()
-    generate_bootdisk(device_model, serial, board_serial, uuid, mac_address, bootpath=bootpath, size=size)
+    generate_bootdisk(device_model, serial, board_serial, uuid, mac_address, master_plist=master_plist, bootpath=bootpath, size=size)
 
 
 if __name__ == '__main__':
@@ -198,6 +193,7 @@ if __name__ == '__main__':
     parser.add_argument('--mac_address', required=True, help="MAC address")
     parser.add_argument('--bootpath', required=True, help="Path to qcow2 disk out")
     parser.add_argument('--size', required=True, help="qcow2 size")
+    parser.add_argument('--master_plist', required=True, help="master plist file")
 
     # Parse command-line arguments
     args = parser.parse_args()
