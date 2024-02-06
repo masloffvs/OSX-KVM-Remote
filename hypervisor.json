@@ -1,3 +1,13 @@
 {
-  "defaultMacStorageSize": "256G"
+  "defaultMacStorageSize": "256G",
+  "vncEveryNewInstanceStep": 1,
+  "plists": [
+    "config-custom.plist",
+    "config-custom-nosip.plist",
+    "config-custom-sonoma.plist",
+    "config-legacy.plist",
+    "config-nopicker-custom.plist",
+    "config-nopicker-legacy.plist",
+    "config-nopicker-sonoma.plist"
+  ]
 }
