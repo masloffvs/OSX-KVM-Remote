@@ -22,6 +22,7 @@ module.exports = {
 	checkFileExists(filePath) {
 		if (fs.existsSync(filePath)) {
 			logger.debug(`file '${filePath}' exists.`);
+			fs.accessSync(filePath)
 			return true;
 		} else {
 			logger.debug(`file '${filePath}' does not exist.`);
