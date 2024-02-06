@@ -134,7 +134,10 @@ module.exports = {
 				]
 			}, options)
 
-			return new QemuOpenCoreRunnable(opt)
+			return {
+				qemu: new QemuOpenCoreRunnable(opt),
+				options: openCoreDisk
+			}
 		},
 
 		async ventura(options, diskDrive, bootableDiskDrive) {
@@ -183,7 +186,10 @@ module.exports = {
 				]
 			}, options)
 
-			return new QemuOpenCoreRunnable(opt)
+			return {
+				qemu: new QemuOpenCoreRunnable(opt),
+				options: openCoreDisk
+			}
 		}
 	}
 }

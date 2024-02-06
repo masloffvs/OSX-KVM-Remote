@@ -185,11 +185,11 @@ app.post('/api/vms/create', async (req, res) => {
 
 	switch (version) {
 		case 'sonoma':
-			proc = Machine.sonoma(opt, hddSrc, bootdiskSrc)
+			proc = await Machine.sonoma(opt, hddSrc, bootdiskSrc)
 			break;
 
 		case 'ventura':
-			proc = Machine.ventura(opt, hddSrc, bootdiskSrc)
+			proc = await Machine.ventura(opt, hddSrc, bootdiskSrc)
 			break;
 
 		default:
@@ -203,17 +203,16 @@ app.post('/api/vms/create', async (req, res) => {
 
 			snapshotFilePath,
 			vncArgs,
-			optionsOfUniqMacHDD,
 			name,
 
-			argv: proc.getArgs(),
+			argv: proc.qemu.getArgs(),
 		}, null, 2),
 	)
 
-	const runnable = proc.run()
+	const runnable = proc.qemu.run()
 
 	vms[name] = Object.freeze({
-		proc,
+		proc: proc.qemu,
 		runnable
 	})
 
