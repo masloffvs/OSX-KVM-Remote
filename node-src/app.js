@@ -120,7 +120,6 @@ app.post('/api/vms/create', async (req, res) => {
 	const hddSrc = path.normalize(process.cwd() + `/data/hdd/DATA_${name}.img`)
 	const bootdiskSrc = path.normalize(process.cwd() + `/data/bootable/BOOT_${name}.qcow2`)
 
-
 	if (!['ventura', 'sonoma'].includes(version)) {
 		return res.status(400).json({
 			error: `this generation (${version}) of virtual machines is not supported`
