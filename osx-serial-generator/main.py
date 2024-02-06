@@ -207,7 +207,7 @@ if __name__ == '__main__':
     if os.path.exists(vars(args).get('bootpath')):
         raise ValueError('you are referencing an existing qcow file, it cannot be overwritten for security reasons')
 
-    if os.path.exists(vars(args).get('master_plist')):
+    if not os.path.exists(vars(args).get('master_plist')):
         raise ValueError('you are referencing an not existing master_plist file')
 
     # Call the main function with the parsed arguments
