@@ -2,8 +2,14 @@ const fs = require('fs');
 const util = require('util');
 const { exec } = require('child_process');
 const {logger} = require("../logger");
+const path = require('node:path')
 
 const execPromise = util.promisify(exec);
+
+const MASTER_PLISTS = {
+	sonoma: path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist'),
+	ventura: path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-legacy.plist')
+}
 
 function generateRandomDeviceModel() {
 	const deviceModels = [
@@ -126,7 +132,6 @@ class SerialDisk {
 				WIDTH = 1920,
 				HEIGHT = 1080,
 				KERNEL_ARGS = '',
-				MASTER_PLIST_URL = 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-nopicker-custom.plist',
 				MASTER_PLIST,
 				OUTPUT_QCOW = `./${SERIAL}.OpenCore-nopicker.qcow2`,
 			} = this.options;
@@ -142,6 +147,7 @@ class SerialDisk {
             --board_serial "${BOARD_SERIAL}" \
             --uuid "${UUID}" \
             --size "${size}" \
+            --master_plist "${MASTER_PLIST}" \
             --mac_address "${MAC_ADDRESS}" \
             --bootpath "${OUTPUT_QCOW}"`;
 
@@ -187,23 +193,29 @@ class SerialDisk {
 }
 
 const options = {
-	DEVICE_MODEL: 'iMacPro1,1',
-	SERIAL: 'C02TW0WAHX87',
-	BOARD_SERIAL: 'C027251024NJG36UE',
-	UUID: '5CCB366D-9118-4C61-A00A-E5BAF3BED451',
-	MAC_ADDRESS: 'A8:5C:2C:9A:46:2F',
+	DEVICE_MODEL: 'NO_DATA',
+	SERIAL: 'NO_SERIAL',
+	BOARD_SERIAL: 'NO_DATA',
+	UUID: 'NO_DATA',
+	MAC_ADDRESS: 'NO_DATA',
 	WIDTH: 1920,
 	HEIGHT: 1080,
 	KERNEL_ARGS: '',
-	MASTER_PLIST_URL: 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-nopicker-custom.plist',
 	MASTER_PLIST: '',
 	OUTPUT_QCOW: './OpenCore-nopicker.qcow2',
 };
 
 module.exports = {
-	async createRandomMacOSHDD(path) {
+	MASTER_PLISTS,
+
+	async createRandomMacOSHDD(path, masterPlist = MASTER_PLISTS.sonoma) {
 		const uniqueOptions = generateUniqueValues(options);
-		const finalOptions = {...uniqueOptions, OUTPUT_QCOW: path}
+		const finalOptions = {
+			...uniqueOptions,
+
+			MASTER_PLIST: MASTER_PLISTS.sonoma,
+			OUTPUT_QCOW: path
+		}
 
 		if (fs.existsSync(path)) {
 			throw "the disk file already exists and cannot be specified as a virtual disk file"
@@ -213,7 +225,7 @@ module.exports = {
 
 		return {
 			creator: await imgCreator.createImage(),
-			finalOptions
+			options: finalOptions
 		};
 	}
 }
