@@ -298,8 +298,8 @@ app.post('/api/vms/:name/stop', (req, res) => {
 });
 
 function spawnWebServer(
-	host = process.env.PORT || 3000,
-	port = process.env.HOST || '0.0.0.0'
+	host = process.env.HOST || '0.0.0.0',
+	port = process.env.PORT || 3000
 ) {
 	app.listen(port, host, () => {
 		logger.info(`server is running and accessible at address tcp://${host}:${port}`)
