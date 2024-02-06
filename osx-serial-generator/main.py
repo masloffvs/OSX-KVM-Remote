@@ -132,8 +132,12 @@ def generate_bootdisk(
     replacement = {
         "{{DEVICE_MODEL}}": device_model,
         "{{SERIAL}}": serial,
+        "{{SERIAL_OLD}}": serial,
         "{{BOARD_SERIAL}}": board_serial,
+        "{{BOARD_SERIAL_OLD}}": board_serial,
         "{{UUID}}": uuid,
+        "{{UUID_OLD}}": uuid,
+        "{{SYSTEM_UUID_OLD}}": uuid,
         "{{ROM}}": rom,
         "{{WIDTH}}": width,
         "{{HEIGHT}}": height,
