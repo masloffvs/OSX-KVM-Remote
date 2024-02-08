@@ -1,5 +1,3 @@
-const disk = require('diskusage');
-const os = require('node:os');
 const {Machine} = require("./machines");
 const {vncDisplayArguments, MACHINE_HOST} = require("./helpers/VncDisplay");
 const express = require('express');

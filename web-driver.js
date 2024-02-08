@@ -40,7 +40,7 @@ const {logger} = require("./node-src/logger");
 let path = os.platform() === 'win32' ? 'c:' : '/';
 
 let info = disk.checkSync(path);
-let freeInGB =info.free / 1024 / 1024 / 1024
+let freeInGB = info.free / 1024 / 1024 / 1024
 
 if (freeInGB < _.get(config, 'reservedSize.max', 256)) {
 	logger.warn("attention! your device may experience overuse of physical memory, since it is not enough to completely fill the maximum disk size")

@@ -12,7 +12,6 @@ class MyRemoteHypervisor {
 		this.host = host; // Store the host URL in an instance variable
 	}
 
-	// Method to fetch VM data from the remote hypervisor
 	async fetchCreateVM(name, version) {
 		const vmUrl = `${this.host}/api/vms/create`;
 
@@ -52,6 +51,27 @@ class MyRemoteHypervisor {
 			}
 
 			return vmData;
+		} catch (error) {
+			throw new Error(`Error fetching VM data: ${error.message}`);
+		}
+	}
+
+	async fetchDisksData() {
+		const vmUrl = `${this.host}/api/resources/disks/list`;
+
+		const vmRequestOptions = {
+			uri: vmUrl,
+			json: true,
+		};
+
+		try {
+			const disksData = await rp(vmRequestOptions);
+
+			if (!Array.isArray(disksData)) {
+				throw new Error('Invalid data format received from the VMs API.');
+			}
+
+			return disksData;
 		} catch (error) {
 			throw new Error(`Error fetching VM data: ${error.message}`);
 		}
@@ -114,6 +134,33 @@ class MyRemoteHypervisor {
 
 			// Display the table
 			console.log('VMs:');
+			console.log(table.toString());
+		} catch (error) {
+			console.error('Error displaying VMs:', error.message);
+		}
+	}
+
+	async displayDisks() {
+		try {
+			const disksData = await this.fetchDisksData();
+
+			// Create a table to display the VM data
+			const table = new Table({
+				head: ['Name', 'CPU Cores', 'RAM (MB)', 'Storage (GB)'],
+				colWidths: [20, 10, 10, 15],
+			});
+
+			// Populate the table with VM information
+			disksData.forEach((disk) => {
+				const { name, sizeInMb, stat: {birthtime}  } = disk;
+
+				console.log(disk)
+
+				table.push([name, Math.round(sizeInMb), birthtime]);
+			});
+
+			// Display the table
+			console.log('Disks:');
 			console.log(table.toString());
 		} catch (error) {
 			console.error('Error displaying VMs:', error.message);
@@ -183,6 +230,14 @@ program
 	.action(() => {
 		// Display VMs
 		hypervisor.displayVMs();
+	});
+
+program
+	.command('disks')
+	.description('List disks')
+	.action(() => {
+		// Display VMs
+		hypervisor.displayDisks()
 	});
 
 // Define the Hyper.Snapshots command
