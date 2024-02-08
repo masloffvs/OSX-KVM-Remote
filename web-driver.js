@@ -37,9 +37,7 @@ const disk = require('diskusage');
 const os = require('node:os');
 const {logger} = require("./node-src/logger");
 
-let path = os.platform() === 'win32' ? 'c:' : '/';
-
-let info = disk.checkSync(path);
+let info = disk.checkSync(process.cwd());
 let freeInGB = info.free / 1024 / 1024 / 1024
 
 if (freeInGB < _.get(config, 'reservedSize.max', 256)) {

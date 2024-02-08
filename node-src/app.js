@@ -117,7 +117,7 @@ app.get('/api/vms/:name/stdout', (req, res) => {
 app.post('/api/vms/create', async (req, res) => {
 	const { name, version } = req.body;
 
-	const info = disk.checkSync(os.platform() === 'win32' ? 'c:' : '/');
+	const info = disk.checkSync(process.cwd());
 	const freeInGB = info.free / 1024 / 1024 / 1024
 
 	const snapshotFilePath = path.normalize(process.cwd() + '/.snapshots/' + md5(name) + '.json')
