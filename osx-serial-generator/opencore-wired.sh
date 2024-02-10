@@ -2,88 +2,131 @@
 
 # https://github.com/kraxel/imagefish
 
+######################################################################
+# defaults
+
 iso=""
 img=""
 cfg=""
+
+######################################################################
+# create work dir
+
+function msg() {
+	local txt="$1"
+	local bold="\x1b[1m"
+	local normal="\x1b[0m"
+	echo -e "${bold}### ${txt}${normal}"
+}
+
+function do_cleanup() {
+	msg "cleaning up ..."
+	if test "$GUESTFISH_PID" != ""; then
+		guestfish --remote -- exit >/dev/null 2>&1 || true
+	fi
+	rm -rf "$WORK"
+}
+
 WORK="${TMPDIR-/var/tmp}/${0##*/}-$$"
-BASE="$(dirname "$0")"
-LIBGUESTFS_BACKEND=direct
-
-# Function to display messages with formatting
-msg() {
-	echo -e "\x1b[1m[$1]: $2\x1b[0m"
-}
-
-# Function to perform cleanup tasks
-do_cleanup() {
-	msg "cleanup" "Cleaning up ..."
-	[ -n "$GUESTFISH_PID" ] && guestfish --remote -- exit >/dev/null 2>&1 || true
-	sudo rm -rf "$WORK"
-}
+mkdir "$WORK" || exit 1
 trap 'do_cleanup' EXIT
 
-mkdir "$WORK" || exit 1
+BASE="$(dirname $0)"
 
-# Function to print help message
-print_help() {
+######################################################################
+# parse args
+
+function print_help() {
 cat <<EOF
-Usage: $0 [ options ]
-Options:
+usage: $0 [ options ]
+options:
     --iso <iso-image>
     --img <disk-image>
     --cfg <clover-config>
 EOF
 }
 
-# Main script logic
-msg "main" "Starting script execution"
-
-# Parse command line options
-while [ "$#" -gt 0 ]; do
+while test "$1" != ""; do
 	case "$1" in
-	--iso) iso="$2"; shift 2 ;;
-	--img) img="$2"; shift 2 ;;
-	--cfg) cfg="$2"; shift 2 ;;
-	*) print_help; exit 1 ;;
+	--iso)
+		iso="$2"
+		shift; shift
+		;;
+	--img)
+		img="$2"
+		shift; shift
+		;;
+	--cfg)
+		cfg="$2"
+		shift; shift
+		;;
 	esac
 done
 
-# Function to execute guestfish commands
-fish() {
+######################################################################
+# guestfish script helpers
+
+function fish() {
 	echo "#" "$@"
-	guestfish --remote -- "$@" || exit 1
+	guestfish --remote -- "$@"		|| exit 1
 }
 
-# Function to initialize disk image
-fish_init() {
-	local format="${img##*.}"
-	format=${format/raw/raw/qcow2}
-	msg "fish_init" "Creating and adding disk image"
-	fish disk-create "$img" "${format:-qcow2}" 384M
-	fish add "$img"
+function fish_init() {
+	local format
+
+	case "$img" in
+	*.raw)	format="raw" ;;
+	*)	format="qcow2";;
+	esac
+
+	msg "creating and adding disk image"
+	fish disk-create $img $format 384M
+	fish add $img
 	fish run
 }
 
-# Function to finalize guestfish operations
-fish_fini() {
-	msg "fish_fini" "Unmounting all"
+function fish_fini() {
 	fish umount-all
 }
 
-# Step 1: Copy files from local folder
-msg "step1" "Copying files from local folder"
-cp -a "$BASE/EFI" "$WORK"
+# disabled by @sickcodes to allow unattended image overwrites
+######################################################################
+# sanity checks
 
-# Step 2: Start guestfish and set up environment
-msg "step2" "Starting guestfish and setting up environment"
+# if test ! -f "$cfg"; then
+# 	echo "ERROR: cfg not found: $cfg"
+# 	exit 1
+# fi
+# if test -f "$img"; then
+# 	if test "$allow_override" = "yes"; then
+# 		rm -f "$img"
+# 	else
+# 		echo "ERROR: image exists: $img"
+# 		exit 1
+# 	fi
+# fi
+
+######################################################################
+# go!
+
+msg "copy files from local folder"
+BASE="$(dirname $0)"
+cp -a $BASE/EFI $WORK
+find "$WORK"
+
+#msg "[debug] list drivers in EFI/OC"
+#(cd $WORK/EFI/OC; find driver* -print)
+
+export LIBGUESTFS_BACKEND=direct
 eval $(guestfish --listen)
-[ -z "$GUESTFISH_PID" ] && { msg "step2" "ERROR: Starting guestfish failed"; exit 1; }
+if test "$GUESTFISH_PID" = ""; then
+	echo "ERROR: starting guestfish failed"
+	exit 1
+fi
 
-# Step 3: Initialize disk image
 fish_init
 
-# Step 4: Partition disk image
-msg "step4" "Partitioning disk image"
+msg "partition disk image"
 fish part-init /dev/sda gpt
 fish part-add /dev/sda p 2048 300000
 fish part-add /dev/sda p 302048 -2048
@@ -92,12 +135,30 @@ fish part-set-bootable /dev/sda 1 true
 fish mkfs vfat /dev/sda1 label:EFI
 fish mkfs vfat /dev/sda2 label:OpenCore
 fish mount /dev/sda2 /
-fish mkdir-p /ESP/EFI/OC/{Kexts,ACPI,Resources,Tools}
-fish copy-in "$cfg" /ESP/EFI/OC/config.plist
-fish copy-in "$WORK/EFI" /ESP
+fish mkdir /ESP
+fish mount /dev/sda1 /ESP
 
-# Final step: Cleanup
+msg "copy files to disk image"
+cp -v "$cfg" $WORK/config.plist
+fish mkdir /ESP/EFI
+fish mkdir /ESP/EFI/OC
+fish mkdir /ESP/EFI/OC/Kexts
+fish mkdir /ESP/EFI/OC/ACPI
+fish mkdir /ESP/EFI/OC/Resources
+fish mkdir /ESP/EFI/OC/Tools
+fish copy-in $WORK/EFI/BOOT /ESP/EFI
+fish copy-in $WORK/EFI/OC/OpenCore.efi /ESP/EFI/OC
+fish copy-in $WORK/EFI/OC/Drivers /ESP/EFI/OC/
+fish copy-in $WORK/EFI/OC/Kexts /ESP/EFI/OC/
+fish copy-in $WORK/EFI/OC/ACPI /ESP/EFI/OC/
+fish copy-in $BASE/resources/OcBinaryData/Resources /ESP/EFI/OC/
+fish copy-in $WORK/EFI/OC/Tools /ESP/EFI/OC/
+
+# Note
+fish copy-in startup.nsh /
+
+BASE="$(dirname $0)"
+fish copy-in "$WORK/config.plist"               /ESP/EFI/OC/
+
+fish find /ESP/
 fish_fini
-
-# End of script
-msg "main" "Script execution completed"
