@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import shutil
 import subprocess
@@ -26,109 +24,97 @@ def do_cleanup():
 WORK = tempfile.mkdtemp(prefix=os.path.basename(__file__) + "-")
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-# Change directory to the working directory
-os.chdir(WORK)
+def imager(iso="", img="", cfg=""):
+    # Change directory to the working directory
+    os.chdir(WORK)
 
-# Parse arguments
-def print_help():
-    print("""usage: {} [ options ]
-options:
-    --iso <iso-image>
-    --img <disk-image>
-    --cfg <clover-config>""".format(__file__))
+    # Function to execute commands in guestfish
+    def fish(*args):
+        print("#", *args)
+        subprocess.run(["guestfish", "--remote", "--"] + list(args), check=True)
 
-args = iter(range(len(os.sys.argv)))
-next(args)
-for i in args:
-    if os.sys.argv[i] == "--iso":
-        iso = os.sys.argv[i + 1]
-        next(args)
-    elif os.sys.argv[i] == "--img":
-        img = os.sys.argv[i + 1]
-        next(args)
-    elif os.sys.argv[i] == "--cfg":
-        cfg = os.sys.argv[i + 1]
-        next(args)
+    # Function to initialize disk image in guestfish
+    def fish_init():
+        format = "raw" if img.endswith(".raw") else "qcow2"
+        msg("creating and adding disk image")
+        fish("disk-create", img, format, "384M")
+        fish("add", img)
+        fish("run")
 
-# Function to execute commands in guestfish
-def fish(*args):
-    print("#", *args)
-    subprocess.run(["guestfish", "--remote", "--"] + list(args), check=True)
+    # Function to finalize disk image in guestfish
+    def fish_fini():
+        fish("umount-all")
 
-# Function to initialize disk image in guestfish
-def fish_init():
-    format = "raw" if img.endswith(".raw") else "qcow2"
-    msg("creating and adding disk image")
-    fish("disk-create", img, format, "384M")
-    fish("add", img)
-    fish("run")
+    # Copy files from local folder
+    msg("copy files from local folder")
+    shutil.copytree(os.path.join(BASE, "EFI"), os.path.join(WORK, "EFI"))
 
-# Function to finalize disk image in guestfish
-def fish_fini():
-    fish("umount-all")
+    # Initialize guestfish
+    p = subprocess.Popen(["guestfish", "--listen"], stdout=subprocess.PIPE)
+    output, _ = p.communicate()
+    if p.returncode == 0:
+        guestfish_pid = output.decode().split('=')[1].strip()
+        os.environ["GUESTFISH_PID"] = guestfish_pid
+    else:
+        print("ERROR: starting guestfish failed")
+        os.sys.exit(1)
 
-# Copy files from local folder
-msg("copy files from local folder")
-shutil.copytree(os.path.join(BASE, "EFI"), os.path.join(WORK, "EFI"))
+    fish_init()
 
-# Initialize guestfish
-p = subprocess.Popen(["guestfish", "--listen"], stdout=subprocess.PIPE)
-output, _ = p.communicate()
-if p.returncode == 0:
-    guestfish_pid = output.decode().split('=')[1].strip()
-    os.environ["GUESTFISH_PID"] = guestfish_pid
-else:
-    print("ERROR: starting guestfish failed")
-    os.sys.exit(1)
+    # Partition disk image in guestfish
+    msg("partition disk image")
+    fish("part-init", "/dev/sda", "gpt")
+    fish("part-add", "/dev/sda", "p", "2048", "300000")
+    fish("part-add", "/dev/sda", "p", "302048", "-2048")
+    fish("part-set-gpt-type", "/dev/sda", "1", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B")
+    fish("part-set-bootable", "/dev/sda", "1", "true")
+    fish("mkfs", "vfat", "/dev/sda1", "label:EFI")
+    fish("mkfs", "vfat", "/dev/sda2", "label:OpenCore")
+    fish("mount", "/dev/sda2", "/")
+    fish("mkdir", "/ESP")
+    fish("mount", "/dev/sda1", "/ESP")
 
-fish_init()
-
-# Partition disk image in guestfish
-msg("partition disk image")
-fish("part-init", "/dev/sda", "gpt")
-fish("part-add", "/dev/sda", "p", "2048", "300000")
-fish("part-add", "/dev/sda", "p", "302048", "-2048")
-fish("part-set-gpt-type", "/dev/sda", "1", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B")
-fish("part-set-bootable", "/dev/sda", "1", "true")
-fish("mkfs", "vfat", "/dev/sda1", "label:EFI")
-fish("mkfs", "vfat", "/dev/sda2", "label:OpenCore")
-fish("mount", "/dev/sda2", "/")
-fish("mkdir", "/ESP")
-fish("mount", "/dev/sda1", "/ESP")
-
-# Copy files to disk image
-msg("copy files to disk image")
-# shutil.copy2(cfg, os.path.join(WORK, "config.plist"))
-
-cfg_path = os.path.join(WORK, "config.plist")
-if os.path.exists(cfg):
-    try:
-        shutil.copy2(cfg, cfg_path)
-    except FileNotFoundError:
-        print(f"ERROR: Config file '{cfg}' not found.")
+    # Copy files to disk image
+    msg("copy files to disk image")
+    cfg_path = os.path.join(WORK, "config.plist")
+    if os.path.exists(cfg):
+        try:
+            shutil.copy2(cfg, cfg_path)
+        except FileNotFoundError:
+            print(f"ERROR: Config file '{cfg}' not found.")
+            exit(1)
+    else:
+        print(f"ERROR: Config file '{cfg}' does not exist.")
         exit(1)
-else:
-    print(f"ERROR: Config file '{cfg}' does not exist.")
-    exit(1)
 
-fish("mkdir", "/ESP/EFI")
-fish("mkdir", "/ESP/EFI/OC")
-fish("mkdir", "/ESP/EFI/OC/Kexts")
-fish("mkdir", "/ESP/EFI/OC/ACPI")
-fish("mkdir", "/ESP/EFI/OC/Resources")
-fish("mkdir", "/ESP/EFI/OC/Tools")
-fish("copy-in", os.path.join(WORK, "EFI/BOOT"), "/ESP/EFI")
-fish("copy-in", os.path.join(WORK, "EFI/OC/OpenCore.efi"), "/ESP/EFI/OC")
-fish("copy-in", os.path.join(WORK, "EFI/OC/Drivers"), "/ESP/EFI/OC/")
-fish("copy-in", os.path.join(WORK, "EFI/OC/Kexts"), "/ESP/EFI/OC/")
-fish("copy-in", os.path.join(WORK, "EFI/OC/ACPI"), "/ESP/EFI/OC/")
-fish("copy-in", os.path.join(BASE, "resources/OcBinaryData/Resources"), "/ESP/EFI/OC/")
-fish("copy-in", os.path.join(WORK, "EFI/OC/Tools"), "/ESP/EFI/OC/")
+    fish("mkdir", "/ESP/EFI")
+    fish("mkdir", "/ESP/EFI/OC")
+    fish("mkdir", "/ESP/EFI/OC/Kexts")
+    fish("mkdir", "/ESP/EFI/OC/ACPI")
+    fish("mkdir", "/ESP/EFI/OC/Resources")
+    fish("mkdir", "/ESP/EFI/OC/Tools")
+    fish("copy-in", os.path.join(WORK, "EFI/BOOT"), "/ESP/EFI")
+    fish("copy-in", os.path.join(WORK, "EFI/OC/OpenCore.efi"), "/ESP/EFI/OC")
+    fish("copy-in", os.path.join(WORK, "EFI/OC/Drivers"), "/ESP/EFI/OC/")
+    fish("copy-in", os.path.join(WORK, "EFI/OC/Kexts"), "/ESP/EFI/OC/")
+    fish("copy-in", os.path.join(WORK, "EFI/OC/ACPI"), "/ESP/EFI/OC/")
+    fish("copy-in", os.path.join(BASE, "resources/OcBinaryData/Resources"), "/ESP/EFI/OC/")
+    fish("copy-in", os.path.join(WORK, "EFI/OC/Tools"), "/ESP/EFI/OC/")
 
-# Note
-fish("copy-in", "startup.nsh", "/")
+    # Note
+    fish("copy-in", "startup.nsh", "/")
+    shutil.copy2(os.path.join(WORK, "config.plist"), "/ESP/EFI/OC/")
 
-shutil.copy2(os.path.join(WORK, "config.plist"), "/ESP/EFI/OC/")
+    fish("find", "/ESP/")
+    fish_fini()
 
-fish("find", "/ESP/")
-fish_fini()
+if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Imager")
+    parser.add_argument("--iso", help="Path to ISO image")
+    parser.add_argument("--img", help="Path to disk image")
+    parser.add_argument("--cfg", help="Path to clover config")
+    args = parser.parse_args()
+
+    imager(args.iso, args.img, args.cfg)
