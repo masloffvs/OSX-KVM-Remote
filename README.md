@@ -11,32 +11,15 @@ alt="Size Limit logo by Anton Lovchikov" width="80" height="80">
 
 <br/>
 
-# Why? For What?
-
-The **OSX-KVM-Remote** project serves the purpose of enabling the creation of a Virtual Hackintosh system. This system can be used for various tasks and objectives, including:
-
-- Educational purposes: Learning about macOS, its internals, and its compatibility with different hardware configurations.
-- Software development: Building and testing macOS applications and software.
-- Kernel debugging: Debugging macOS kernel issues.
-- Reversing: Analyzing and reversing macOS binaries.
-- macOS security research: Studying the security aspects of macOS in a controlled environment.
-
-
-# Requirements
-
-Before getting started with the **OSX-KVM-Remote** project, you need to ensure that you meet the following requirements:
-
-- A modern Linux distribution, such as Ubuntu 22.04 LTS 64-bit or later.
-- QEMU version 6.2.0 or higher.
-- A CPU with Intel VT-x or AMD SVM support (you can check this with `grep -e vmx -e svm /proc/cpuinfo`).
-- SSE4.1 support for macOS Sierra or later.
-- AVX2 support for macOS Mojave or later.
-
-_**Note**: Older AMD CPUs may have compatibility issues, but modern AMD Ryzen processors are known to work well._
-
 ### Installation
 ```shell
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/masloffvs/OSX-KVM-Remote/main/get.sh)"
+```
+
+
+### Run
+```shell
+./run-server.sh
 ```
 
 ### Usage
