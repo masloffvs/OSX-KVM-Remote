@@ -1,27 +1,4 @@
-const {isFreePort} = require('find-free-ports');
-
-_factoryPorts = [...Array(99).keys()].map(i => i + 4901)
-_factoryPortsUsed = []
-
-function nextVncPort() {
-	const port = _factoryPorts.filter(i => !_factoryPortsUsed.includes(i))[0]
-
-	if (port) {
-		_factoryPortsUsed.push(port)
-	}
-
-	return port
-}
-
-async function findFreeVncPort(startPort = 5901, endPort = 5999) {
-	for (let port = startPort; port <= endPort; port++) {
-		if (await isFreePort(port)) {
-			return port
-		}
-	}
-
-	return null
-}
+const {Throwable} = require("../Throwable");
 
 function vncDisplay(
 	host = this.MACHINE_HOST,
@@ -29,7 +6,11 @@ function vncDisplay(
 	passwordEnabled = false
 ) {
 	if (host === undefined) {
-		host = this.LOCAL_HOST
+		throw new Throwable(
+			"The VNC host value must refer to an existing network address and be neither an empty string nor null, undefined",
+			this.vncDisplayArguments,
+			{host, port}
+		)
 	}
 
 	if (passwordEnabled === true) {
@@ -44,15 +25,21 @@ module.exports = {
 	MACHINE_HOST: '127.0.0.1',
 
 	vncDisplay,
-	findFreeVncPort,
-	nextVncPort,
 
-	vncDisplayArguments({host, port}) {
+	vncDisplayArguments({host, port} = {host: this.LOCAL_HOST, port: 1}) {
 		return {
-			nographic: true,
 			displayDevices: vncDisplay(
-				String(host) || undefined,
-				parseInt(port) || 1,
+				String(host) || throw new Throwable(
+					"The VNC host value must refer to an existing network address and be neither an empty string nor null, undefined",
+					this.vncDisplayArguments,
+					{host, port}
+				),
+
+				parseInt(String(port)) || throw new Throwable(
+					"VNC port must be a positive integer",
+					this.vncDisplayArguments,
+					{host, port}
+				),
 			),
 		}
 	}
