@@ -1,6 +1,6 @@
 const QemuOpenCoreRunnable = require("./OpenCoreRunnable");
 const {vncDisplay} = require("./helpers/VncDisplay");
-const {driverDevice, VirtualDrive} = require("./helpers/Drive");
+const {driverDevice, VirtualDrive, MediaVentura, MediaSonoma} = require("./helpers/Drive");
 const {NetDeviceWithMultiplyForward} = require("./helpers/NetDevice");
 const path = require("node:path");
 const DiskLink = require("./DiskLink");
@@ -87,6 +87,17 @@ const ovmfVars1024x768File = new PhantomFile({
 	path: path.normalize(process.cwd() + "/OVMF_VARS-1024x768.fd"
 )})
 
+const driverDevices = [
+	driverDevice('isa-applesmc', { osk: 'ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc' }),
+	driverDevice('nec-usb-xhci', { id: 'xhci' }),
+	driverDevice('usb-ehci', { id: 'ehci' }),
+	driverDevice('ich9-intel-hda'),
+	driverDevice('hda-duplex'),
+	driverDevice('ich9-ahci', { id: 'sata' }),
+	driverDevice('ide-hd', { bus: 'sata.2', drive: 'OpenCoreBoot' }),
+	driverDevice('ide-hd', { bus: 'sata.3', drive: 'InstallMedia' }),
+]
+
 module.exports = {
 	Machine: {
 		async sonoma(options, diskDrive, bootableDiskDrive) {
@@ -102,30 +113,20 @@ module.exports = {
 
 			const openCoreDisk = await spawnBootableDiskWithUniqData(
 				path.normalize(bootableDiskDrive),
-				MASTER_PLISTS.sonoma
+				MASTER_PLISTS.default
 			)
 
 			const opt = Object.assign({
 				kvm: process.platform === 'linux',
-				nographic: true,
 				networkDevices: [
 					netDevice
 				],
 				storageDevices: [
 					openCoreDisk.openCoreBoot,
-					DiskLink.installSonomaMedia.createGhostDrive(),
+					MediaSonoma.createGhostDrive(),
 					dataDrive
 				],
-				customDeviceParams: [
-					driverDevice('isa-applesmc', { osk: 'ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc' }),
-					driverDevice('nec-usb-xhci', { id: 'xhci' }),
-					driverDevice('usb-ehci', { id: 'ehci' }),
-					driverDevice('ich9-intel-hda'),
-					driverDevice('hda-duplex'),
-					driverDevice('ich9-ahci', { id: 'sata' }),
-					driverDevice('ide-hd', { bus: 'sata.2', drive: 'OpenCoreBoot' }),
-					driverDevice('ide-hd', { bus: 'sata.3', drive: 'InstallMedia' }),
-				],
+				customDeviceParams: driverDevices,
 				otherArgs: [
 					`-device ide-hd,bus=sata.4,drive=${dataDrive.id || dataDrive.label}`,
 					`-drive if=pflash,format=raw,file="${ovmfCodeFile.createTempPersistentFile()}"`,
@@ -159,25 +160,15 @@ module.exports = {
 			const opt = Object.assign({
 				kvm: process.platform === 'linux',
 				cpuType: "Penryn",
-				nographic: true,
 				networkDevices: [
 					netDevice
 				],
 				storageDevices: [
 					openCoreDisk.openCoreBoot,
-					DiskLink.installVenturaMedia.createGhostDrive(),
+					MediaVentura.createGhostDrive(),
 					dataDrive
 				],
-				customDeviceParams: [
-					driverDevice('isa-applesmc', { osk: 'ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc' }),
-					driverDevice('nec-usb-xhci', { id: 'xhci' }),
-					driverDevice('usb-ehci', { id: 'ehci' }),
-					driverDevice('ich9-intel-hda'),
-					driverDevice('hda-duplex'),
-					driverDevice('ich9-ahci', { id: 'sata' }),
-					driverDevice('ide-hd', { bus: 'sata.2', drive: 'OpenCoreBoot' }),
-					driverDevice('ide-hd', { bus: 'sata.3', drive: 'InstallMedia' }),
-				],
+				customDeviceParams: driverDevices,
 				otherArgs: [
 					`-device ide-hd,bus=sata.4,drive=${dataDrive.id || dataDrive.label}`,
 					`-drive if=pflash,format=raw,file="${ovmfCodeFile.createTempPersistentFile()}"`,
