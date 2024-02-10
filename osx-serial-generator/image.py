@@ -70,9 +70,12 @@ msg("copy files from local folder")
 shutil.copytree(os.path.join(BASE, "EFI"), os.path.join(WORK, "EFI"))
 
 # Initialize guestfish
-os.environ["LIBGUESTFS_BACKEND"] = "direct"
-subprocess.Popen(["guestfish", "--listen"])
-if os.environ.get("GUESTFISH_PID", "") == "":
+p = subprocess.Popen(["guestfish", "--listen"], stdout=subprocess.PIPE)
+output, _ = p.communicate()
+if p.returncode == 0:
+    guestfish_pid = output.decode().split('=')[1].strip()
+    os.environ["GUESTFISH_PID"] = guestfish_pid
+else:
     print("ERROR: starting guestfish failed")
     os.sys.exit(1)
 
