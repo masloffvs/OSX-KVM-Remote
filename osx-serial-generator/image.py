@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+from datetime import datetime
 
 from root import WORK, BASE
 
@@ -11,11 +12,12 @@ img = ""
 cfg = ""
 
 
-# Function to print messages
 def msg(txt):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    gray = "\033[90m"
     bold = "\033[1m"
     normal = "\033[0m"
-    print(f"{bold}### {txt}{normal}")
+    print(f"{gray}[{timestamp}] {bold}### {txt}{normal}")
 
 
 # Function to perform cleanup
@@ -28,7 +30,6 @@ def do_cleanup():
 def imager(img="", cfg=""):
     # Function to execute commands in guestfish
     def fish(*args):
-        print("#", *args)
         subprocess.run(["guestfish", "--remote", "--"] + list(args), check=True)
 
     # Function to initialize disk image in guestfish
