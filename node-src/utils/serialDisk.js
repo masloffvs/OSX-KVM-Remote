@@ -1,15 +1,15 @@
-const fs = require('fs');
-const util = require('util');
-const { exec } = require('child_process');
+const fs = require('node:fs');
+const util = require('node:util');
+const { exec } = require('node:child_process');
 const {logger} = require("../logger");
 const path = require('node:path')
 
-const execPromise = util.promisify(exec);
+const _DEFUALT_PLIST = path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist')
 
 const MASTER_PLISTS = {
-	default: path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist'),
-	sonoma: this.default,
-	ventura: this.default,
+	default: _DEFUALT_PLIST,
+	sonoma: _DEFUALT_PLIST,
+	ventura: _DEFUALT_PLIST,
 }
 
 function generateRandomDeviceModel() {
@@ -211,7 +211,7 @@ const options = {
 module.exports = {
 	MASTER_PLISTS,
 
-	async createRandomMacOSHDD(path, masterPlist = MASTER_PLISTS.sonoma) {
+	async createRandomMacOSHDD(path, masterPlist = MASTER_PLISTS.default) {
 		const uniqueOptions = generateUniqueValues(options);
 		const finalOptions = {
 			...uniqueOptions,
