@@ -3,6 +3,8 @@ import shutil
 import subprocess
 import tempfile
 
+from root import WORK, BASE
+
 # Define defaults
 iso = ""
 img = ""
@@ -21,11 +23,6 @@ def do_cleanup():
     msg("cleaning up ...")
     subprocess.run(["guestfish", "--remote", "--", "exit"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     shutil.rmtree(WORK)
-
-
-# Define working directory
-WORK = tempfile.mkdtemp(prefix=os.path.basename(__file__) + "-")
-BASE = os.path.dirname(os.path.abspath(__file__))
 
 
 def imager(img="", cfg=""):

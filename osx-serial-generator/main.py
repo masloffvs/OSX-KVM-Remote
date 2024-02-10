@@ -5,6 +5,7 @@ import argparse
 import shutil
 import xml.etree.ElementTree as ET
 
+from root import WORK, BASE, TEMP_PATH_CONFIG_PLIST
 
 # URL to download the 'opencore-image-ng.sh' script
 OPENCORE_IMAGE_MAKER_URL = 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/opencore-image-ng.sh'
@@ -138,10 +139,10 @@ def generate_bootdisk(
     if not bootpath:
         bootpath = f"./{serial}.OpenCore-nopicker.qcow2"
 
-    if not os.path.exists('./tmp.config.plist'):
+    if not os.path.exists(TEMP_PATH_CONFIG_PLIST):
         shutil.copyfile(
             master_plist,
-            './tmp.config.plist'
+            TEMP_PATH_CONFIG_PLIST
         )
 
     # Convert MAC address to ROM format
@@ -164,13 +165,13 @@ def generate_bootdisk(
     }
 
     try:
-        with open('./tmp.config.plist', 'r') as file:
+        with open(TEMP_PATH_CONFIG_PLIST, 'r') as file:
             plist = file.read()
 
         for word, initial in replacement.items():
             plist = plist.replace(str(word), str(initial))
 
-        with open('./tmp.config.plist', 'w+') as file:
+        with open(TEMP_PATH_CONFIG_PLIST, 'w+') as file:
             file.write(plist)
 
     except FileNotFoundError:
@@ -189,7 +190,7 @@ def generate_bootdisk(
 
     imager(
         bootpath,
-        "./tmp.config.plist"
+        TEMP_PATH_CONFIG_PLIST
     )
 
 
@@ -240,8 +241,8 @@ if __name__ == '__main__':
     # Parse command-line arguments
     args = parser.parse_args()
 
-    if os.path.exists('./tmp.config.plist'):
-        os.remove('./tmp.config.plist')
+    if os.path.exists(TEMP_PATH_CONFIG_PLIST):
+        os.remove(TEMP_PATH_CONFIG_PLIST)
 
     if not vars(args).get('bootpath').endswith(".qcow2"):
         raise ValueError('bootpath must be a valid path to the qcow disk')
