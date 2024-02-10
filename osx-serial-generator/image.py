@@ -12,6 +12,26 @@ img = ""
 cfg = ""
 
 
+def check_file_exists(file_path):
+    if os.path.exists(file_path):
+        msg(f"File '{file_path}' exists.")
+    else:
+        msg(f"Error: File '{file_path}' does not exist.")
+
+
+def check_directories():
+    check_file_exists(os.path.join(BASE, "EFI", "BOOT"))
+    check_file_exists(os.path.join(BASE, "EFI", "OC"))
+    check_file_exists(os.path.join(BASE, "EFI", "OC", "OpenCore.efi"))
+    check_file_exists(os.path.join(BASE, "EFI", "OC", "Drivers"))
+    check_file_exists(os.path.join(BASE, "EFI", "OC", "Kexts"))
+    check_file_exists(os.path.join(BASE, "EFI", "OC", "ACPI"))
+
+
+def check_config_and_startup(cfg_path):
+    check_file_exists(cfg_path)
+    check_file_exists(os.path.join(BASE, "startup.nsh"))
+
 # Function to perform cleanup
 def do_cleanup():
     msg("cleaning up ...")
@@ -20,6 +40,9 @@ def do_cleanup():
 
 
 def imager(img="", cfg=""):
+    check_directories()
+    check_config_and_startup(cfg)
+
     # Function to execute commands in guestfish
     def fish(*args):
         subprocess.run(["guestfish", "--remote", "--"] + list(args), check=False)
@@ -48,7 +71,7 @@ def imager(img="", cfg=""):
         os.environ["GUESTFISH_PID"] = guestfish_pid
     else:
         print("ERROR: starting guestfish failed")
-        os.sys.exit(1)
+        exit(1)
 
     fish_init()
 
@@ -97,11 +120,10 @@ def imager(img="", cfg=""):
     msg("Mounting the EFI partition")
     fish("mount", "/dev/sda1", "/ESP")
 
-
-
-# Copy files to disk image
+    # Copy files to disk image
     msg("copy files to disk image")
     cfg_path = os.path.join(WORK, "config.plist")
+
     if os.path.exists(cfg):
         try:
             shutil.copy2(cfg, cfg_path)
@@ -160,8 +182,8 @@ def imager(img="", cfg=""):
     fish("copy-in", "startup.nsh", "/")
 
     # Find files on the OpenCore partition
-    msg("Finding files on the OpenCore partition")
-    fish("find", "/ESP/")
+    # msg("Finding files on the OpenCore partition")
+    # fish("find", "/ESP/")
 
     fish_fini()
 
