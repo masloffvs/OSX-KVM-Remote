@@ -110,6 +110,7 @@ def download_qcow_efi_folder():
                 if not os.path.exists(dst_path):
                     shutil.copy2(src_path, dst_path)
 
+
 # This function generates a bootdisk configuration for a given device.
 # It takes various parameters like device model, serial number, board serial number, UUID, MAC address, display resolution, and kernel arguments.
 # The function first checks if a master configuration plist file exists, and if not, it downloads it from a URL and saves it locally.
@@ -166,8 +167,6 @@ def generate_bootdisk(
         "{{HEIGHT}}": height,
         "{{KERNEL_ARGS}}": kernel_args
     }
-
-    print(replacement)
 
     with open('./tmp.config.plist', 'r') as file:
         plist = file.read()
