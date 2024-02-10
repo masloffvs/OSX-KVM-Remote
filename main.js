@@ -1,7 +1,7 @@
 const QemuOpenCoreRunnable = require("./node-src/OpenCoreRunnable");
 const {vncDisplayArguments} = require("./node-src/helpers/VncDisplay");
 const {NetDevice} = require("./node-src/helpers/NetDevice");
-const {VirtualDrive, driverDevice, toVirtualDrive} = require("./node-src/helpers/Drive");
+const {driverDevice} = require("./node-src/helpers/Drive");
 const DiskLink = require("./node-src/DiskLink");
 
 const netDevice = new NetDevice('net0', 2212, 22);
