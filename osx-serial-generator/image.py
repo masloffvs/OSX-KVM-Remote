@@ -102,8 +102,8 @@ def imager(img="", cfg=""):
     fish("copy-in", os.path.join(BASE, "resources/OcBinaryData/Resources"), "/ESP/EFI/OC/")
     fish("copy-in", os.path.join(WORK, "EFI/OC/Tools"), "/ESP/EFI/OC/")
 
-    # Note
-    fish("copy-in", "startup.nsh", "/")
+    # Note :)
+    fish("copy-in", os.path.join(WORK, "startup.nsh"), "/")
     shutil.copy2(os.path.join(WORK, "config.plist"), "/ESP/EFI/OC/")
 
     fish("find", "/ESP/")
