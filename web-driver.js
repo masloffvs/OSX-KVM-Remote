@@ -35,7 +35,14 @@ for (const plist of _.get(config, 'plists', [])) {
 
 const disk = require('diskusage');
 const os = require('node:os');
+
 const {logger} = require("./node-src/logger");
+const fs = require("node:fs");
+
+if (!fs.existsSync('.vnc-port')) {
+	fs.writeFileSync('.vnc-port', "1")
+}
+
 
 let info = disk.checkSync(process.cwd());
 let freeInGB = info.free / 1024 / 1024 / 1024
