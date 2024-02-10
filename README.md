@@ -9,18 +9,18 @@ alt="Size Limit logo by Anton Lovchikov" width="80" height="80">
 ![JavaScript](https://img.shields.io/badge/javascript-yellow?style=for-the-badge&logo=javascript&logoColor=white)
 ![Bash](https://img.shields.io/badge/bash-black?style=for-the-badge&logo=zsh&logoColor=white)
 
-<br/>
 
 ### Installation
 ```shell
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/masloffvs/OSX-KVM-Remote/main/get.sh)"
 ```
 
-
 ### Run
 ```shell
 ./run-server.sh
 ```
+
+<hr/>
 
 ### Usage
 ##### First step. Export HOST-name for requests
