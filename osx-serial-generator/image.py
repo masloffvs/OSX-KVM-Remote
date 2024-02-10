@@ -1,102 +1,117 @@
 #!/usr/bin/env python3
+
 import os
+import shutil
 import subprocess
-import pexpect
-import asyncio
 
-# Function to display messages with formatting
-def msg(operation, message):
-    print(f"[{operation}]: {message}")
+# Define defaults
+iso = ""
+img = ""
+cfg = ""
 
-# Function to perform cleanup tasks
+# Function to print messages
+def msg(txt):
+    bold = "\033[1m"
+    normal = "\033[0m"
+    print(f"{bold}### {txt}{normal}")
+
+# Function to perform cleanup
 def do_cleanup():
-    msg("cleanup", "Cleaning up ...")
-    if os.getenv("GUESTFISH_PID"):
-        child.sendline("exit")
-        child.expect(pexpect.EOF)
-    os.rmdir(WORK)
+    msg("cleaning up ...")
+    subprocess.run(["guestfish", "--remote", "--", "exit"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    shutil.rmtree(WORK)
 
-# Check if guestfish utility exists
-def check_guestfish():
-    try:
-        subprocess.run(["guestfish", "--version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    except FileNotFoundError:
-        print("ERROR: guestfish utility not found. Please install it.")
-        exit(1)
+# Define working directory
+WORK = os.path.join(os.getenv("TMPDIR", "/var/tmp"), os.path.basename(__file__) + "-$$")
+os.mkdir(WORK)
+os.chdir(WORK)
+BASE = os.path.dirname(__file__)
 
-def execute_guestfish_commands(commands):
-    for command in commands:
-        child.sendline(command)
-        child.expect(">")
+# Parse arguments
+def print_help():
+    print("""usage: {} [ options ]
+options:
+    --iso <iso-image>
+    --img <disk-image>
+    --cfg <clover-config>""".format(__file__))
 
-async def main():
-    # Starting guestfish and setting up environment
-    msg("main", "Starting guestfish and setting up environment")
-    global child
-    child = pexpect.spawn("guestfish --listen")
-    child.expect(pexpect.EOF)
+args = iter(range(len(os.sys.argv)))
+next(args)
+for i in args:
+    if os.sys.argv[i] == "--iso":
+        iso = os.sys.argv[i + 1]
+        next(args)
+    elif os.sys.argv[i] == "--img":
+        img = os.sys.argv[i + 1]
+        next(args)
+    elif os.sys.argv[i] == "--cfg":
+        cfg = os.sys.argv[i + 1]
+        next(args)
 
-    # Wait for a brief moment for the prompt to appear
-    await asyncio.sleep(1)
+# Function to execute commands in guestfish
+def fish(*args):
+    print("#", *args)
+    subprocess.run(["guestfish", "--remote", "--"] + list(args), check=True)
 
-    # Initialize disk image
-    msg("main", "Initializing disk image")
-    commands = [
-        "disk-create {} {} 384M".format(img, "raw" if img.endswith(".raw") else "qcow2"),
-        "add {}".format(img),
-        "run"
-    ]
-    execute_guestfish_commands(commands)
+# Function to initialize disk image in guestfish
+def fish_init():
+    format = "raw" if img.endswith(".raw") else "qcow2"
+    msg("creating and adding disk image")
+    fish("disk-create", img, format, "384M")
+    fish("add", img)
+    fish("run")
 
-    # Partition disk image
-    msg("main", "Partitioning disk image")
-    commands = [
-        "part-init /dev/sda gpt",
-        "part-add /dev/sda p 2048 300000",
-        "part-add /dev/sda p 302048 -2048",
-        "part-set-gpt-type /dev/sda 1 C12A7328-F81F-11D2-BA4B-00A0C93EC93B",
-        "part-set-bootable /dev/sda 1 true",
-        "mkfs vfat /dev/sda1 label:EFI",
-        "mkfs vfat /dev/sda2 label:OpenCore",
-        "mount /dev/sda2 /",
-        "mkdir /ESP/EFI/OC/{Kexts,ACPI,Resources,Tools}",
-        f"copy-in {cfg} /ESP/EFI/OC/config.plist",
-        f"copy-in {WORK}/EFI /ESP"
-    ]
-    execute_guestfish_commands(commands)
+# Function to finalize disk image in guestfish
+def fish_fini():
+    fish("umount-all")
 
-    # Finalize
-    msg("main", "Finishing up")
-    subprocess.run(["guestfish", "--remote", "--", "umount-all"])
+# Copy files from local folder
+msg("copy files from local folder")
+shutil.copytree(os.path.join(BASE, "EFI"), os.path.join(WORK, "EFI"))
 
-# Main script
-if __name__ == "__main__":
-    iso = ""
-    img = ""
-    cfg = ""
+# Initialize guestfish
+os.environ["LIBGUESTFS_BACKEND"] = "direct"
+subprocess.Popen(["guestfish", "--listen"])
+if os.environ.get("GUESTFISH_PID", "") == "":
+    print("ERROR: starting guestfish failed")
+    os.sys.exit(1)
 
-    # Check if guestfish utility exists
-    check_guestfish()
+fish_init()
 
-    # Create work directory
-    WORK = f"{os.getenv('TMPDIR', '/var/tmp')}/{os.path.basename(__file__)}-{os.getpid()}"
-    os.mkdir(WORK)
+# Partition disk image in guestfish
+msg("partition disk image")
+fish("part-init", "/dev/sda", "gpt")
+fish("part-add", "/dev/sda", "p", "2048", "300000")
+fish("part-add", "/dev/sda", "p", "302048", "-2048")
+fish("part-set-gpt-type", "/dev/sda", "1", "C12A7328-F81F-11D2-BA4B-00A0C93EC93B")
+fish("part-set-bootable", "/dev/sda", "1", "true")
+fish("mkfs", "vfat", "/dev/sda1", "label:EFI")
+fish("mkfs", "vfat", "/dev/sda2", "label:OpenCore")
+fish("mount", "/dev/sda2", "/")
+fish("mkdir", "/ESP")
+fish("mount", "/dev/sda1", "/ESP")
 
-    # Set trap for cleanup
-    import atexit
-    atexit.register(do_cleanup)
+# Copy files to disk image
+msg("copy files to disk image")
+shutil.copy2(cfg, os.path.join(WORK, "config.plist"))
+fish("mkdir", "/ESP/EFI")
+fish("mkdir", "/ESP/EFI/OC")
+fish("mkdir", "/ESP/EFI/OC/Kexts")
+fish("mkdir", "/ESP/EFI/OC/ACPI")
+fish("mkdir", "/ESP/EFI/OC/Resources")
+fish("mkdir", "/ESP/EFI/OC/Tools")
+fish("copy-in", os.path.join(WORK, "EFI/BOOT"), "/ESP/EFI")
+fish("copy-in", os.path.join(WORK, "EFI/OC/OpenCore.efi"), "/ESP/EFI/OC")
+fish("copy-in", os.path.join(WORK, "EFI/OC/Drivers"), "/ESP/EFI/OC/")
+fish("copy-in", os.path.join(WORK, "EFI/OC/Kexts"), "/ESP/EFI/OC/")
+fish("copy-in", os.path.join(WORK, "EFI/OC/ACPI"), "/ESP/EFI/OC/")
+fish("copy-in", os.path.join(BASE, "resources/OcBinaryData/Resources"), "/ESP/EFI/OC/")
+fish("copy-in", os.path.join(WORK, "EFI/OC/Tools"), "/ESP/EFI/OC/")
 
-    BASE = os.path.dirname(__file__)
+# Note
+fish("copy-in", "startup.nsh", "/")
 
-    # Parse command line options
-    import argparse
-    parser = argparse.ArgumentParser(description="Script to perform some task.")
-    parser.add_argument("--iso", help="ISO image")
-    parser.add_argument("--img", help="Disk image")
-    parser.add_argument("--cfg", help="Clover config")
-    args = parser.parse_args()
-    iso = args.iso
-    img = args.img
-    cfg = args.cfg
+shutil.copy2(os.path.join(WORK, "config.plist"), "/ESP/EFI/OC/")
 
-    asyncio.run(main())
+fish("find", "/ESP/")
+fish_fini()
