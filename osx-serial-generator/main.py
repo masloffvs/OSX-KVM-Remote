@@ -119,11 +119,11 @@ def generate_bootdisk(
         )
 
     # Check if the 'opencore-image-ng.sh' script exists, if not, download and make it executable
-    if not os.path.exists('./opencore-image-ng.sh'):
+    if not os.path.exists('./opencore-wired.sh'):
         response = requests.get(OPENCORE_IMAGE_MAKER_URL)
-        with open('./opencore-image-ng.sh', 'wb') as file:
+        with open('./opencore-wired.sh', 'wb') as file:
             file.write(response.content)
-        os.chmod('./opencore-image-ng.sh', 0o755)
+        os.chmod('./opencore-wired.sh', 0o755)
 
     # Convert MAC address to ROM format
     rom = mac_address.replace(':', '').lower()
