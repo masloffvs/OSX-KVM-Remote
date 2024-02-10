@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import asyncio
 import os
 import subprocess
 import pexpect
+import asyncio
 
 # Function to display messages with formatting
 def msg(operation, message):
@@ -28,15 +28,16 @@ def execute_guestfish_commands(commands):
     for command in commands:
         child.sendline(command)
         child.expect(">")
-    child.sendline("exit")
-    child.expect(pexpect.EOF)
 
 async def main():
     # Starting guestfish and setting up environment
     msg("main", "Starting guestfish and setting up environment")
     global child
     child = pexpect.spawn("guestfish --listen")
-    child.expect(">")
+    child.expect(pexpect.EOF)
+
+    # Wait for a brief moment for the prompt to appear
+    await asyncio.sleep(1)
 
     # Initialize disk image
     msg("main", "Initializing disk image")
