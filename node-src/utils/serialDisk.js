@@ -7,8 +7,9 @@ const path = require('node:path')
 const execPromise = util.promisify(exec);
 
 const MASTER_PLISTS = {
-	sonoma: path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist'),
-	ventura: path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist')
+	default: path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist'),
+	sonoma: this.default,
+	ventura: this.default,
 }
 
 function generateRandomDeviceModel() {
