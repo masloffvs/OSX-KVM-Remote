@@ -17,7 +17,9 @@ const _ = require("lodash");
 const Ajv = require("ajv")
 const {config} = require("./config");
 const os = require("node:os");
-const disk = require("diskusage");
+const {writeSnapshotFile, buildVirtualMachine, createVMImage, incrementVNCPort, getVNCArguments, checkIfVMExists, checkDiskSpace,
+	getFreeDiskSpace, validateNameAndVersion
+} = require("./SDK");
 
 const ajv = new Ajv() // options can be passed, e.g. {allErrors: true}
 
@@ -41,24 +43,6 @@ if (fs.existsSync(process.cwd() + "/http.json")) {
 		}))
 	}
 }
-
-app.set('views', process.cwd() + '/views');
-app.set('view engine', 'jsx');
-
-app.engine('jsx', require('express-react-views').createEngine());
-
-if (!fs.existsSync('.vnc-port')) {
-	fs.writeFileSync('.vnc-port', "1")
-}
-
-app.get('/', function(req, res){
-	res.render('index', {
-		vms: Object.entries(vms).map(pair => ({
-			name: pair[0],
-			vm: pair[1],
-		}))
-	});
-});
 
 app.get('/api/vms/list', function(req, res){
 	res.json(
@@ -114,127 +98,58 @@ app.get('/api/vms/:name/stdout', (req, res) => {
 	return res.send(stdout);
 });
 
+// Handle POST request to create a new virtual machine
 app.post('/api/vms/create', async (req, res) => {
-	const { name, version } = req.body;
+	try {
+		const { name, version } = req.body;
 
-	const info = disk.checkSync(process.cwd());
-	const freeInGB = info.free / 1024 / 1024 / 1024
+		// Validate name and version
+		validateNameAndVersion(name, version);
 
-	const snapshotFilePath = path.normalize(process.cwd() + '/.snapshots/' + md5(name) + '.json')
-	const hddSrc = path.normalize(process.cwd() + `/data/hdd/DATA_${name}.img`)
-	const bootdiskSrc = path.normalize(process.cwd() + `/data/bootable/BOOT_${name}.qcow2`)
+		// Check free disk space
+		const freeInGB = getFreeDiskSpace();
 
-	if (!['ventura', 'sonoma'].includes(version)) {
-		return res.status(400).json({
-			error: `this generation (${version}) of virtual machines is not supported`
-		})
+		// Ensure free space is sufficient
+		checkDiskSpace(freeInGB);
+
+		// Check if the virtual machine already exists
+		checkIfVMExists(name);
+
+		// Increment VNC port
+		const newVncPort = incrementVNCPort();
+
+		// Set up VNC arguments
+		const vncArgs = getVNCArguments(newVncPort);
+
+		// Create virtual machine image
+		await createVMImage(name);
+
+		// Launch VM based on the specified version
+		const proc = await buildVirtualMachine(version, vncArgs, name);
+
+		// Write snapshot file
+		writeSnapshotFile(name, vncArgs, proc);
+
+		// Send response with virtual machine name and VNC arguments
+		res.status(201).json(
+			{
+				data: {
+					vm: { name, vncArgs },
+					host: {
+						diskFreeSpace: freeInGB,
+					}
+				},
+				isError: false,
+			}
+		);
+	} catch (error) {
+		res
+			.status(500)
+			.json({
+				data: error.message,
+				isError: true
+			});
 	}
-
-	if (!/^[a-zA-Z]+$/.test(name)) {
-		return res.status(400).json({
-			error: `virtual machine name is incorrect. it can be specified exclusively in English characters, without special characters, spaces or numbers`
-		})
-	}
-
-	if (freeInGB < _.get(config, 'reservedSize.min', 30)) {
-		logger.error("attention! There is not enough space on your device to create a virtual disk")
-
-		return res.status(500).json({
-			error: `there is not enough free space on the device to create and then fill a hard disk. need ${_.get(config, 'reservedSize.min', 30)}GB, you have ${freeInGB}GB`
-		});
-	}
-
-
-	if (fs.existsSync(snapshotFilePath)) {
-		return res.status(500).json({
-			error: `virtual machine named '${name}' already exists and can only be launched via the run command`
-		});
-	}
-
-	const port = parseInt(String(fs.readFileSync('.vnc-port')))
-	const newVncPort = String(port + _.get(config, 'vncEveryNewInstanceStep', 1))
-
-	fs.writeFileSync('.vnc-port', newVncPort)
-
-	const vncArgs = Object.freeze({
-		host: MACHINE_HOST,
-		port: newVncPort
-	})
-
-	if (typeof vms[name] != "undefined") {
-		return res.status(500).json({
-			error: `virtual machine named "${name}" has already been created and is running`
-		})
-	}
-
-
-	const imageCreator = new ImgCreator(
-		hddSrc,
-		_.get(
-			config,
-			'defaultMacStorageSize',
-			'256G'
-		)
-	)
-
-	await imageCreator.createImage()
-
-	fs.accessSync(hddSrc)
-
-	const opt = {
-		onStdoutData: function (byte) {
-			fs.appendFileSync(process.cwd() + `/.tty/stdout_${md5(name)}.log`, byte)
-		},
-
-		onStdinData: function (byte) {
-			fs.appendFileSync(process.cwd() + `/.tty/stdin_${md5(name)}.log`, byte)
-		},
-
-		...vncDisplayArguments(vncArgs),
-	}
-
-	let proc
-
-	switch (version) {
-		case 'sonoma':
-			proc = await Machine.sonoma(opt, hddSrc, bootdiskSrc)
-			break;
-
-		case 'ventura':
-			proc = await Machine.ventura(opt, hddSrc, bootdiskSrc)
-			break;
-
-		default:
-			throw "unsupported OS version"
-	}
-
-	fs.writeFileSync(
-		snapshotFilePath,
-		JSON.stringify({
-			creationDate: new Date(),
-
-			snapshotFilePath,
-			vncArgs,
-			name,
-
-			argv: proc.qemu.getArgs(),
-		}, null, 2),
-	)
-
-	const runnable = proc.qemu.run()
-
-	vms[name] = Object.freeze({
-		proc: proc.qemu,
-		runnable
-	})
-
-	pidusage(runnable.pid).then(i => {
-		res.json({
-			name,
-			process: i,
-			vncArgs
-		})
-	})
 });
 
 app.post('/api/vms/:name/start', (req, res) => {
