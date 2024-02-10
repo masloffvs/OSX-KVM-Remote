@@ -5,52 +5,11 @@ import argparse
 import shutil
 import xml.etree.ElementTree as ET
 
-from root import WORK, BASE, TEMP_PATH_CONFIG_PLIST
-
-# URL to download the 'opencore-image-ng.sh' script
-OPENCORE_IMAGE_MAKER_URL = 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/opencore-image-ng.sh'
+from root import msg, TEMP_PATH_CONFIG_PLIST
 
 # URL to download the master configuration plist file
 MASTER_PLIST_URL = 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-nopicker-custom.plist'
 
-def print_node(node, indent=0):
-    # Create a string with spaces for indentation
-    space = " " * indent
-
-    if node.tag == "key":
-        # If the node is a key, print it followed by a colon
-        print(f"{space}{node.text}: ", end="")
-    elif node.tag in ["string", "integer", "true", "false", "data"]:
-        # If the node is one of these types, print its text
-        print(f"{node.text}")
-    elif node.tag in ["dict", "array"]:
-        # If the node is a dictionary or an array, print a newline
-        print()
-        # Iterate through its children and print them with increased indentation
-        for child in node:
-            print_node(child, indent + 2)
-    else:
-        # For other node types, just iterate through the children
-        for child in node:
-            print_node(child, indent)
-
-def parse_plist_for_platform_info(xml_data):
-    print("PlatformInfo:")
-    # Parse the XML data into an ElementTree object
-    try:
-        root = ET.fromstring(xml_data)
-        inside_platform_info = False
-
-        for child in root.iter():
-            if child.tag == "key" and child.text == "PlatformInfo":
-                # If we find a "PlatformInfo" key, set a flag to indicate we are inside it
-                inside_platform_info = True
-            elif child.tag == "dict" and inside_platform_info:
-                # If we are inside "PlatformInfo" and find a dictionary, start printing its contents
-                print_node(child, 1)
-                break  # Exit the loop after printing the first dictionary
-    except:
-        print("Unfortunately, this plist cannot be visualized")
 
 # This function is responsible for downloading an EFI folder required for running macOS on a KVM virtual machine.
 # It first checks if the 'EFI' folder already exists locally. If not, it proceeds to clone the 'OSX-KVM' repository.
@@ -110,6 +69,35 @@ def download_qcow_efi_folder():
                 dst_path = os.path.join('./EFI/OC/Resources', file)
                 if not os.path.exists(dst_path):
                     shutil.copy2(src_path, dst_path)
+
+def print_macos_parameters(replacement):
+    # ANSI escape sequences for colors
+    green = "\033[92m"  # green
+    blue = "\033[94m"   # blue
+    magenta = "\033[95m" # magenta
+    cyan = "\033[96m"   # cyan
+    yellow = "\033[93m" # yellow
+    bold = "\033[1m"    # bold
+    end_color = "\033[0m"  # end color
+
+    # Print header
+    print(f"{bold}{blue}Your new MacOS configuration:{end_color}")
+
+    # Print parameters
+    for key, value in replacement.items():
+        if value is not None:
+            # Determine color based on parameter
+            if key in ["{{DEVICE_MODEL}}", "{{SERIAL}}", "{{SERIAL_OLD}}", "{{BOARD_SERIAL}}", "{{BOARD_SERIAL_OLD}}"]:
+                color = cyan
+            elif key in ["{{UUID}}", "{{UUID_OLD}}", "{{SYSTEM_UUID_OLD}}", "{{ROM}}"]:
+                color = magenta
+            elif key in ["{{WIDTH}}", "{{HEIGHT}}"]:
+                color = yellow
+            else:
+                color = green
+
+            # Print parameter
+            print(f"{bold}{color}{key}: {end_color}{value}")
 
 
 # This function generates a bootdisk configuration for a given device.
@@ -175,18 +163,18 @@ def generate_bootdisk(
             file.write(plist)
 
     except FileNotFoundError:
-        print("File tmp.config.plist not found.")
+        msg("File tmp.config.plist not found.")
     except IOError:
-        print("Input/output error occurred while reading or writing the file.")
+        msg("Input/output error occurred while reading or writing the file.")
     except Exception as e:
-        print("An error occurred:", e)
+        msg("An error occurred:", e)
 
     if not plist:
         exit(0)
 
-    parse_plist_for_platform_info(plist)
-
     from image import imager
+
+    print_macos_parameters(replacement)
 
     imager(
         bootpath,

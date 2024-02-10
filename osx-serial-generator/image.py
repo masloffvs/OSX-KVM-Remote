@@ -4,20 +4,12 @@ import subprocess
 import tempfile
 from datetime import datetime
 
-from root import WORK, BASE
+from root import WORK, BASE, msg
 
 # Define defaults
 iso = ""
 img = ""
 cfg = ""
-
-
-def msg(txt):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    gray = "\033[90m"
-    bold = "\033[1m"
-    normal = "\033[0m"
-    print(f"{gray}[{timestamp}] {bold}### {txt}{normal}")
 
 
 # Function to perform cleanup
@@ -30,12 +22,12 @@ def do_cleanup():
 def imager(img="", cfg=""):
     # Function to execute commands in guestfish
     def fish(*args):
-        subprocess.run(["guestfish", "--remote", "--"] + list(args), check=True)
+        subprocess.run(["guestfish", "--remote", "--"] + list(args), check=False)
 
     # Function to initialize disk image in guestfish
     def fish_init():
         format = "raw" if img.endswith(".raw") else "qcow2"
-        msg("creating and adding disk image")
+        msg("Creating and adding disk image")
         fish("disk-create", img, format, "384M")
         fish("add", img)
         fish("run")
@@ -45,7 +37,7 @@ def imager(img="", cfg=""):
         fish("umount-all")
 
     # Copy files from local folder
-    msg("copy files from local folder")
+    msg("Copy files from local folder")
     shutil.copytree(os.path.join(BASE, "EFI"), os.path.join(WORK, "EFI"))
 
     # Initialize guestfish
