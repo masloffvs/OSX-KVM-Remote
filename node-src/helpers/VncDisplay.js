@@ -13,6 +13,15 @@ function vncDisplay(
 		)
 	}
 
+	if (!port) {
+		throw new Throwable(
+			"VNC port must be a positive integer",
+			this.vncDisplayArguments,
+			{host, port}
+		)
+	}
+
+
 	if (passwordEnabled === true) {
 		console.log(":(")
 	}
@@ -29,17 +38,8 @@ module.exports = {
 	vncDisplayArguments({host, port} = {host: this.LOCAL_HOST, port: 1}) {
 		return {
 			displayDevices: vncDisplay(
-				String(host) || throw new Throwable(
-					"The VNC host value must refer to an existing network address and be neither an empty string nor null, undefined",
-					this.vncDisplayArguments,
-					{host, port}
-				),
-
-				parseInt(String(port)) || throw new Throwable(
-					"VNC port must be a positive integer",
-					this.vncDisplayArguments,
-					{host, port}
-				),
+				String(host),
+				parseInt(String(port)),
 			),
 		}
 	}
