@@ -26,9 +26,6 @@ def do_cleanup():
 
 
 def imager(img="", cfg=""):
-    # Change directory to the working directory
-    os.chdir(WORK)
-
     # Function to execute commands in guestfish
     def fish(*args):
         print("#", *args)
@@ -103,7 +100,7 @@ def imager(img="", cfg=""):
     fish("copy-in", os.path.join(WORK, "EFI/OC/Tools"), "/ESP/EFI/OC/")
 
     # Note :)
-    fish("copy-in", os.path.join(WORK, "startup.nsh"), "/")
+    fish("copy-in", "startup.nsh", "/")
     shutil.copy2(os.path.join(WORK, "config.plist"), "/ESP/EFI/OC/")
 
     fish("find", "/ESP/")
