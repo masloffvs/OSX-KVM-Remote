@@ -158,7 +158,7 @@ def generate_bootdisk(
     parse_plist_for_platform_info(plist)
 
     imgNgPath = [
-        './opencore-image-ng.sh',
+        './opencore-wired.sh',
         '--cfg',
         './tmp.config.plist',
         '--img',
