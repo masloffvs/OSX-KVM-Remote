@@ -1,15 +1,8 @@
 import os
 import shutil
 import subprocess
-import tempfile
-from datetime import datetime
 
 from root import WORK, BASE, msg
-
-# Define defaults
-iso = ""
-img = ""
-cfg = ""
 
 
 def check_file_exists(file_path):
@@ -32,6 +25,7 @@ def check_config_and_startup(cfg_path):
     check_file_exists(cfg_path)
     check_file_exists(os.path.join(BASE, "startup.nsh"))
 
+
 # Function to perform cleanup
 def do_cleanup():
     msg("cleaning up ...")
@@ -39,7 +33,7 @@ def do_cleanup():
     shutil.rmtree(WORK)
 
 
-def imager(img="", cfg=""):
+def imager(img="", cfg="", disk_size='384M'):
     check_directories()
     check_config_and_startup(cfg)
 
@@ -51,7 +45,7 @@ def imager(img="", cfg=""):
     def fish_init():
         format = "raw" if img.endswith(".raw") else "qcow2"
         msg("Creating and adding disk image")
-        fish("disk-create", img, format, "384M")
+        fish("disk-create", img, format, disk_size)
         fish("add", img)
         fish("run")
 
@@ -186,6 +180,7 @@ def imager(img="", cfg=""):
     # fish("find", "/ESP/")
 
     fish_fini()
+
 
 if __name__ == "__main__":
     import argparse

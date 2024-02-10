@@ -37,6 +37,7 @@ if sudo -v; then
     check_file_exists "config-nopicker-custom.plist"
     check_file_exists "config-nopicker-legacy.plist"
     check_file_exists "config-nopicker-sonoma.plist"
+    check_file_exists "startup.nsh"
 
     # Validate XML files as config files
     for config_file in "config-custom.plist" "config-custom-nosip.plist" "config-custom-sonoma.plist" "config-legacy.plist" "config-nopicker-custom.plist" "config-nopicker-legacy.plist" "config-nopicker-sonoma.plist"; do
@@ -90,9 +91,6 @@ if sudo -v; then
 
     log_step "REMOVE_SERIAL_SETS" "Removing 'serial_sets' files..."
     rm -f serial_sets*
-
-#    log_step "RUN_MAINPY" "Running main.py..."
-#    python3 main.py
 
 else
     echo "Incorrect sudo password. Exiting..."

@@ -1,22 +1,11 @@
-import os
-import subprocess
-import requests
 import argparse
+import os
 import shutil
-import xml.etree.ElementTree as ET
+import subprocess
 
 from root import msg, TEMP_PATH_CONFIG_PLIST
 
-# URL to download the master configuration plist file
-MASTER_PLIST_URL = 'https://raw.githubusercontent.com/sickcodes/osx-serial-generator/master/config-nopicker-custom.plist'
 
-
-# This function is responsible for downloading an EFI folder required for running macOS on a KVM virtual machine.
-# It first checks if the 'EFI' folder already exists locally. If not, it proceeds to clone the 'OSX-KVM' repository.
-# The 'startup.nsh' file is created to specify the EFI bootloader path for the virtual machine.
-# Directories are created for the 'EFI/OC/Resources' path if they don't exist.
-# The EFI folder is then copied from the 'OSX-KVM' repository to the current directory.
-# Additionally, resources from the 'OcBinaryData/Resources' folder are copied to 'EFI/OC/Resources'.
 def download_qcow_efi_folder():
     # Path to the local EFI folder
     efi_folder = './OpenCore/EFI'
@@ -70,6 +59,7 @@ def download_qcow_efi_folder():
                 if not os.path.exists(dst_path):
                     shutil.copy2(src_path, dst_path)
 
+
 def print_macos_parameters(replacement):
     # ANSI escape sequences for colors
     green = "\033[92m"  # green
@@ -100,15 +90,6 @@ def print_macos_parameters(replacement):
             print(f"{bold}{color}{key}: {end_color}{value}")
 
 
-# This function generates a bootdisk configuration for a given device.
-# It takes various parameters like device model, serial number, board serial number, UUID, MAC address, display resolution, and kernel arguments.
-# The function first checks if a master configuration plist file exists, and if not, it downloads it from a URL and saves it locally.
-# It also checks if the 'opencore-image-ng.sh' script exists and downloads it if necessary, making it executable.
-# The MAC address is converted to a ROM value for customization.
-# A list of sed expressions is created to replace placeholders in the master plist file with the provided values.
-# A sed command is constructed with these expressions and applied to the master plist to create a temporary configuration file.
-# The 'opencore-image-ng.sh' script is then executed with the temporary config file to generate the bootdisk image.
-# Finally, the temporary config file is removed.
 def generate_bootdisk(
     device_model,
     serial,
@@ -215,8 +196,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # Define the command-line argument parser
     parser = argparse.ArgumentParser(description="Generate a bootdisk with custom parameters.")
+
     parser.add_argument('--device_model', required=True, help="Device model")
     parser.add_argument('--serial', required=True, help="Serial number")
     parser.add_argument('--board_serial', required=True, help="Board serial number")
@@ -226,7 +207,6 @@ if __name__ == '__main__':
     parser.add_argument('--size', required=True, help="qcow2 size")
     parser.add_argument('--master_plist', required=True, help="master plist file")
 
-    # Parse command-line arguments
     args = parser.parse_args()
 
     if os.path.exists(TEMP_PATH_CONFIG_PLIST):
@@ -241,5 +221,4 @@ if __name__ == '__main__':
     if not os.path.exists(vars(args).get('master_plist')):
         raise ValueError('you are referencing an not existing master_plist file')
 
-    # Call the main function with the parsed arguments
     main(vars(args))
