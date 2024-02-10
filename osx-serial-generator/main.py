@@ -185,17 +185,12 @@ def generate_bootdisk(
 
     parse_plist_for_platform_info(plist)
 
-    img_ng_path = [
-        'python3',
-        'image.py',
-        '--cfg',
-        './tmp.config.plist',
-        '--img',
-        bootpath
-    ]
+    from image import imager
 
-    # Execute 'opencore-image-ng.sh' with the temporary config file to generate the bootdisk image
-    subprocess.run(img_ng_path, check=True)
+    imager(
+        bootpath,
+        "./tmp.config.plist"
+    )
 
     # Remove the temporary config file
     os.remove('./tmp.config.plist')

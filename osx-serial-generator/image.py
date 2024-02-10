@@ -8,11 +8,13 @@ iso = ""
 img = ""
 cfg = ""
 
+
 # Function to print messages
 def msg(txt):
     bold = "\033[1m"
     normal = "\033[0m"
     print(f"{bold}### {txt}{normal}")
+
 
 # Function to perform cleanup
 def do_cleanup():
@@ -20,11 +22,13 @@ def do_cleanup():
     subprocess.run(["guestfish", "--remote", "--", "exit"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     shutil.rmtree(WORK)
 
+
 # Define working directory
 WORK = tempfile.mkdtemp(prefix=os.path.basename(__file__) + "-")
 BASE = os.path.dirname(os.path.abspath(__file__))
 
-def imager(iso="", img="", cfg=""):
+
+def imager(img="", cfg=""):
     # Change directory to the working directory
     os.chdir(WORK)
 
@@ -108,13 +112,13 @@ def imager(iso="", img="", cfg=""):
     fish("find", "/ESP/")
     fish_fini()
 
+
 if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description="Imager")
-    parser.add_argument("--iso", help="Path to ISO image")
     parser.add_argument("--img", help="Path to disk image")
     parser.add_argument("--cfg", help="Path to clover config")
     args = parser.parse_args()
 
-    imager(args.iso, args.img, args.cfg)
+    imager(args.img, args.cfg)
