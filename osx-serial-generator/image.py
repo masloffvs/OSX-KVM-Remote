@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+import tempfile
 
 # Define defaults
 iso = ""
@@ -22,10 +23,11 @@ def do_cleanup():
     shutil.rmtree(WORK)
 
 # Define working directory
-WORK = os.path.join(os.getenv("TMPDIR", "/var/tmp"), os.path.basename(__file__) + "-$$")
-os.mkdir(WORK)
+WORK = tempfile.mkdtemp(prefix=os.path.basename(__file__) + "-")
+BASE = os.path.dirname(os.path.abspath(__file__))
+
+# Change directory to the working directory
 os.chdir(WORK)
-BASE = os.path.dirname(__file__)
 
 # Parse arguments
 def print_help():
