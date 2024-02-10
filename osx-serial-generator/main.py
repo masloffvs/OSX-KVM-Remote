@@ -158,7 +158,8 @@ def generate_bootdisk(
     parse_plist_for_platform_info(plist)
 
     imgNgPath = [
-        'python3 image.py',
+        'python3',
+        'image.py',
         '--cfg',
         './tmp.config.plist',
         '--img',
