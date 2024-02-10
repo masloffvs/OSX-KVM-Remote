@@ -192,9 +192,6 @@ def generate_bootdisk(
         "./tmp.config.plist"
     )
 
-    # Remove the temporary config file
-    os.remove('./tmp.config.plist')
-
 
 def main(args):
     # Extract arguments from the provided dictionary
