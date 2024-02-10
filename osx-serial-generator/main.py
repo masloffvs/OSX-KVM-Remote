@@ -212,8 +212,8 @@ if __name__ == '__main__':
     if os.path.exists(TEMP_PATH_CONFIG_PLIST):
         os.remove(TEMP_PATH_CONFIG_PLIST)
 
-    if not vars(args).get('bootpath').endswith(".qcow2"):
-        raise ValueError('bootpath must be a valid path to the qcow disk')
+    if not vars(args).get('bootpath').endswith(".qcow2") and not vars(args).get('bootpath').endswith(".img"):
+        raise ValueError('bootpath must be a valid path to the qcow/img disk')
 
     if os.path.exists(vars(args).get('bootpath')):
         raise ValueError('you are referencing an existing qcow file, it cannot be overwritten for security reasons')
