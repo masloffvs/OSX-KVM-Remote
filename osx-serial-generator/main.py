@@ -213,7 +213,7 @@ def main(args):
     master_plist = args.get('master_plist')
 
     # Validate serial number
-    if not serial.isdigit() or len(serial) != 12:
+    if len(serial) != 12 or not all(c in "0123456789ABCDEF" for c in serial):
         raise ValueError("Invalid serial number format for macOS.")
 
     # Validate UUID
