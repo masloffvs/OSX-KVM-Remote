@@ -133,6 +133,8 @@ def generate_bootdisk(
     size='512GB',
     master_plist='./config-nopicker-custom.plist'
 ):
+    plist = None
+
     if not bootpath:
         bootpath = f"./{serial}.OpenCore-nopicker.qcow2"
 
@@ -141,13 +143,6 @@ def generate_bootdisk(
             master_plist,
             './tmp.config.plist'
         )
-
-    # Check if the 'opencore-image-ng.sh' script exists, if not, download and make it executable
-    if not os.path.exists('./opencore-wired.sh'):
-        response = requests.get(OPENCORE_IMAGE_MAKER_URL)
-        with open('./opencore-wired.sh', 'wb') as file:
-            file.write(response.content)
-        os.chmod('./opencore-wired.sh', 0o755)
 
     # Convert MAC address to ROM format
     rom = mac_address.replace(':', '').lower()
@@ -168,18 +163,29 @@ def generate_bootdisk(
         "{{KERNEL_ARGS}}": kernel_args
     }
 
-    with open('./tmp.config.plist', 'r') as file:
-        plist = file.read()
+    try:
+        with open('./tmp.config.plist', 'r') as file:
+            plist = file.read()
 
         for word, initial in replacement.items():
             plist = plist.replace(str(word), str(initial))
 
-    with open('./tmp.config.plist', 'w') as file:
-        file.write(plist)
+        with open('./tmp.config.plist', 'w+') as file:
+            file.write(plist)
+
+    except FileNotFoundError:
+        print("File tmp.config.plist not found.")
+    except IOError:
+        print("Input/output error occurred while reading or writing the file.")
+    except Exception as e:
+        print("An error occurred:", e)
+
+    if not plist:
+        exit(0)
 
     parse_plist_for_platform_info(plist)
 
-    imgNgPath = [
+    img_ng_path = [
         'python3',
         'image.py',
         '--cfg',
@@ -189,7 +195,7 @@ def generate_bootdisk(
     ]
 
     # Execute 'opencore-image-ng.sh' with the temporary config file to generate the bootdisk image
-    subprocess.run(imgNgPath, check=True)
+    subprocess.run(img_ng_path, check=True)
 
     # Remove the temporary config file
     os.remove('./tmp.config.plist')
@@ -205,6 +211,23 @@ def main(args):
     mac_address = args.get('mac_address')
     bootpath = args.get('bootpath')
     master_plist = args.get('master_plist')
+
+    # Validate serial number
+    if not serial.isdigit() or len(serial) != 12:
+        raise ValueError("Invalid serial number format for macOS.")
+
+    # Validate UUID
+    import uuid as uuid_lib
+    try:
+        uuid_obj = uuid_lib.UUID(uuid)
+    except ValueError:
+        raise ValueError("Invalid UUID format.")
+
+    # Validate MAC address
+    import re
+    mac_regex = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$')
+    if not mac_regex.match(mac_address):
+        raise ValueError("Invalid MAC address format.")
 
     download_qcow_efi_folder()
     generate_bootdisk(device_model, serial, board_serial, uuid, mac_address, master_plist=master_plist, bootpath=bootpath, size=size)

@@ -98,7 +98,19 @@ fish("mount", "/dev/sda1", "/ESP")
 
 # Copy files to disk image
 msg("copy files to disk image")
-shutil.copy2(cfg, os.path.join(WORK, "config.plist"))
+# shutil.copy2(cfg, os.path.join(WORK, "config.plist"))
+
+cfg_path = os.path.join(WORK, "config.plist")
+if os.path.exists(cfg):
+    try:
+        shutil.copy2(cfg, cfg_path)
+    except FileNotFoundError:
+        print(f"ERROR: Config file '{cfg}' not found.")
+        exit(1)
+else:
+    print(f"ERROR: Config file '{cfg}' does not exist.")
+    exit(1)
+
 fish("mkdir", "/ESP/EFI")
 fish("mkdir", "/ESP/EFI/OC")
 fish("mkdir", "/ESP/EFI/OC/Kexts")
