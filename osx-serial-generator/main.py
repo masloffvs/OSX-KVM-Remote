@@ -80,12 +80,35 @@ def download_qcow_efi_folder():
     # Create directories if they don't exist for 'EFI/OC/Resources'
     os.makedirs('./EFI/OC/Resources', exist_ok=True)
 
-    # Copy the EFI folder from the 'OSX-KVM' repository to the current directory
-    subprocess.run(['cp', '-a', efi_folder, '.'], check=True)
+    # Check if the source EFI folder exists
+    if os.path.isdir(efi_folder):
+        # Copy the EFI folder from the 'OSX-KVM' repository to the current directory
+        for root, dirs, files in os.walk(efi_folder):
+            for dir in dirs:
+                src_path = os.path.join(root, dir)
+                dst_path = os.path.join('.', dir)
+                if not os.path.exists(dst_path):
+                    os.makedirs(dst_path)
+            for file in files:
+                src_path = os.path.join(root, file)
+                dst_path = os.path.join('.', file)
+                if not os.path.exists(dst_path):
+                    shutil.copy2(src_path, dst_path)
 
-    # Copy resources from 'OcBinaryData/Resources' to 'EFI/OC/Resources'
-    subprocess.run(['cp', '-a', f"{resources_folder}/*", './EFI/OC/Resources'], shell=True)
-
+    # Check if the source resources folder exists
+    if os.path.isdir(resources_folder):
+        # Copy resources from 'OcBinaryData/Resources' to 'EFI/OC/Resources'
+        for root, dirs, files in os.walk(resources_folder):
+            for dir in dirs:
+                src_path = os.path.join(root, dir)
+                dst_path = os.path.join('./EFI/OC/Resources', dir)
+                if not os.path.exists(dst_path):
+                    os.makedirs(dst_path)
+            for file in files:
+                src_path = os.path.join(root, file)
+                dst_path = os.path.join('./EFI/OC/Resources', file)
+                if not os.path.exists(dst_path):
+                    shutil.copy2(src_path, dst_path)
 
 # This function generates a bootdisk configuration for a given device.
 # It takes various parameters like device model, serial number, board serial number, UUID, MAC address, display resolution, and kernel arguments.
