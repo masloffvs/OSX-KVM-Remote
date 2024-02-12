@@ -66,8 +66,7 @@ class VirtualDrive extends Drive {
 			this.path = path_.normalize(process.cwd() + '/' + path);
 		}
 
-		logger.error(`final path to '${label || id || path}' disk is '${this.path}'`)
-
+		logger.debug(`final path to '${label || id || path}' disk is '${this.path}'`)
 
 		if (!fs.existsSync(this.path)) {
 			logger.error(`virtual disk at path '${this.path}' not found`)
@@ -104,7 +103,7 @@ class VirtualDrive extends Drive {
 	}
 
 	createGhostDrive() {
-		const newPath = path_.normalize(process.cwd() + '/data/hdd/ghost_' + (label || id))
+		const newPath = path_.normalize(process.cwd() + '/data/hdd/ghost_' + (this.label || this.id))
 
 		// Check if the file already exists
 		if (fs.existsSync(newPath)) {

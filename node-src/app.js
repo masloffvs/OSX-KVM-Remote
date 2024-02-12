@@ -122,10 +122,10 @@ app.post('/api/vms/create', async (req, res) => {
 		const vncArgs = getVNCArguments(newVncPort);
 
 		// Create virtual machine image
-		await createVMImage(name);
+		const hddSrc = await createVMImage(name);
 
 		// Launch VM based on the specified version
-		const proc = await buildVirtualMachine(version, vncArgs, name);
+		const proc = await buildVirtualMachine(version, vncArgs, name, hddSrc);
 
 		// Write snapshot file
 		writeSnapshotFile(name, vncArgs, proc);

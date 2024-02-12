@@ -66,11 +66,12 @@ async function createVMImage(name) {
 	);
 	await imageCreator.createImage();
 	fs.accessSync(hddSrc);
+
+	return hddSrc
 }
 
 // Launch virtual machine based on the specified version
-async function buildVirtualMachine(version, vncArgs, name) {
-	const hddSrc = normalize(process.cwd() + `/data/hdd/DATA_${name}.img`);
+async function buildVirtualMachine(version, vncArgs, name, hddSrc) {
 	const bootdiskSrc = normalize(process.cwd() + `/data/bootable/BOOT_${name}.qcow2`);
 	const opt = {
 		onStdoutData: byte => appendFileSync(process.cwd() + `/.tty/stdout_${md5(name)}.log`, byte),
