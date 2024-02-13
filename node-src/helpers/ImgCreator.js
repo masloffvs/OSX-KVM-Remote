@@ -5,6 +5,9 @@ const {logger} = require("../logger");
 
 const execPromise = util.promisify(exec);
 
+/**
+ * @deprecated
+ */
 class ImgCreator {
 	constructor(filename, size) {
 		this.filename = filename;

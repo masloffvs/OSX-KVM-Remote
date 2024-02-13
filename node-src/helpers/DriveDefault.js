@@ -1,3 +1,7 @@
+
+/**
+ * @deprecated
+ */
 class Drive {
 	constructor(size, format, label) {
 		this.size = size;

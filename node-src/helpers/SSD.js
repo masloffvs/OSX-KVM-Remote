@@ -1,5 +1,8 @@
 const {Drive} = require("./DriveDefault");
 
+/**
+ * @deprecated
+ */
 class SSD extends Drive {
 	constructor(size, format, label) {
 		super(size, format, label);

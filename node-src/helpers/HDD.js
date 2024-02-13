@@ -1,5 +1,8 @@
 const {Drive} = require("./DriveDefault");
 
+/**
+ * @deprecated
+ */
 class HDD extends Drive {
 	constructor(size, format, label) {
 		super(size, format, label);
