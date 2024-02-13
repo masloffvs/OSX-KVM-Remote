@@ -45,7 +45,7 @@ function driverDevice(device, options = {}) {
 		.map(([key, value]) => (value ? `${key}="${value}"` : key))
 		.join(',');
 
-	return `-device ${device}${optionStrings ? `,${optionStrings}` : ''}`;
+	return ['-device', `${device}${optionStrings ? `,${optionStrings}` : ''}`];
 }
 
 module.exports = {
