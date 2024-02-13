@@ -1,5 +1,5 @@
 {
-  "defaultMacStorageSize": "124G",
+  "defaultMacStorageSize": "128G",
   "reservedSize": {
     "min": 30,
     "mean": 120,
