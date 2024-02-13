@@ -27,6 +27,7 @@ class AppleComputer {
 	_ovmfFiles = []
 	_display = []
 	_vnc = []
+	_hypervisorVmx = "hypervisor=off,vmx=on"
 
 	_newInterface = 'net0'
 	_enableGraphic = true
@@ -66,6 +67,12 @@ class AppleComputer {
 
 	setDataDrive(appleVirtualDrive) {
 		this._virtualDataDrives.push(appleVirtualDrive)
+
+		return this
+	}
+
+	setHypervisorVmxConfig(hypervisor=false, vmx=true) {
+		this._hypervisorVmx = `hypervisor=${hypervisor ? 'on' : 'off'},vmx=${vmx ? 'on' : 'off'},`
 
 		return this
 	}
@@ -119,7 +126,6 @@ class AppleComputer {
 				])
 				.concat(dataDriveLinkArgs)
 				.concat(['-vga vmware', '-monitor unix:qemu-monitor-socket,server,nowait'])
-
 		)
 
 		return Object.assign({
@@ -128,9 +134,11 @@ class AppleComputer {
 			networkDevices: [
 				new NetDeviceWithMultiplyForward(this._newInterface, this._portForwarding)
 			],
+
 			displayDevices: [],
 			audioDevices: [],
 
+			additionalCpuOptions: `${this._hypervisorVmx},`,
 			otherArgs: args
 		}, {})
 	}

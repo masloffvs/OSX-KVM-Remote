@@ -1,12 +1,7 @@
 const { program } = require('commander');
 const { input, confirm } = require('@inquirer/prompts');
-const {AppleDisk} = require("./node-src/Foundation/AppleDisk");
-const {AppleBaseSystemHub} = require("./node-src/Foundation/AppleBasesystemHub");
-const {AppleComputer} = require("./node-src/Foundation/AppleComputer");
-const {AppleVirtualDrive} = require("./node-src/Foundation/AppleVirtualDrive");
-const {AppleBootableHub} = require("./node-src/Foundation/AppleBootableHub");
-const {AppleOVMF} = require("./node-src/Foundation/AppleOVMF");
-const {UnixVirtualization} = require("./node-src/Foundation/UnixVirtualization");
+const {AppleBootable} = require("./node-src/Foundation/AppleBootable");
+const {logger} = require("./node-src/logger");
 
 program
 	.option("--size <size>", "Size of disk")
@@ -26,12 +21,41 @@ program
 program
 	.command("prebuilt-disks")
 	.action(async (name) => {
-		console.log(AppleBaseSystemHub)
+		// console.log(AppleBaseSystemHub)
 	})
+
+program
+	.command("spawn-random-bootable-data")
+	.action(async () => {
+		const {AppleBootable} = require("./node-src/Foundation/AppleBootable");
+
+		console.log(AppleBootable.spawnData())
+	})
+
+program
+	.command("spawn-random-bootable-disk")
+	.action(async () => {
+		const {AppleBootable} = require("./node-src/Foundation/AppleBootable");
+
+		const data = AppleBootable.spawnData()
+
+		AppleBootable
+			.spawnDisk(data)
+			.then(logger.info)
+			.catch(logger.error)
+	})
+
 
 program
 	.command("create-vm <name>")
 	.action(async (name) => {
+		const {AppleOVMF} = require("./node-src/Foundation/AppleOVMF");
+		const {UnixVirtualization} = require("./node-src/Foundation/UnixVirtualization");
+		const {AppleDisk} = require("./node-src/Foundation/AppleDisk");
+		const {AppleComputer} = require("./node-src/Foundation/AppleComputer");
+		const {AppleBaseSystemHub} = require("./node-src/Foundation/AppleBasesystemHub");
+		const {AppleBootableHub} = require("./node-src/Foundation/AppleBootableHub");
+
 		const computer = new AppleComputer()
 
 		const dataVirtualDrive = await AppleDisk.of(name).spawnImage(true)

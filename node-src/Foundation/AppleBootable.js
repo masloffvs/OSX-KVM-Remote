@@ -1,17 +1,31 @@
 const path = require("node:path");
 const {logger} = require("../logger");
 const {exec} = require("node:child_process");
+const shell = require("shelljs");
 
 class AppleBootable {
-	_DEFAULT_PLIST = path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist')
+	static _DEFAULT_PLIST = path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist')
 
-	MASTER_PLISTS = {
+	static MASTER_PLISTS = {
 		default: this._DEFAULT_PLIST,
 		sonoma: this._DEFAULT_PLIST,
 		ventura: this._DEFAULT_PLIST,
 	}
 
-	generateRandomDeviceModel() {
+	static _OPTIONS = {
+		DEVICE_MODEL: 'NO_DATA',
+		SERIAL: 'NO_SERIAL',
+		BOARD_SERIAL: 'NO_DATA',
+		UUID: 'NO_DATA',
+		MAC_ADDRESS: 'NO_DATA',
+		WIDTH: 1920,
+		HEIGHT: 1080,
+		KERNEL_ARGS: '',
+		MASTER_PLIST: './config-nopicker-custom.plist',
+		OUTPUT_QCOW: './OpenCore-nopicker.qcow2',
+	}
+
+	static generateRandomDeviceModel() {
 		const deviceModels = [
 			'iMacPro1,1',
 			'MacBookAir5,2',
@@ -49,38 +63,27 @@ class AppleBootable {
 		return deviceModels[randomIndex];
 	}
 
-	generateUniqueValues(baseObject) {
-		return {
-			...baseObject,
-			DEVICE_MODEL: generateRandomDeviceModel(),
-			SERIAL: generateUniqueSerial(),
-			BOARD_SERIAL: generateUniqueBoardSerial(),
-			UUID: generateUUID().toUpperCase(),
-			MAC_ADDRESS: generateMacAddress(),
-		};
-	}
-
-	generateUniqueDeviceModel(baseModel) {
+	static generateUniqueDeviceModel(baseModel) {
 		const randomNum = Math.floor(Math.random() * 10000);
 		return `${baseModel}-${randomNum}`;
 	}
 
-	generateUniqueSerial() {
+	static generateUniqueSerial() {
 		return [...Array(12)].map(() => Math.floor(Math.random() * 16).toString(16)).join('').toUpperCase();
 	}
 
-	generateUniqueBoardSerial() {
+	static generateUniqueBoardSerial() {
 		return [...Array(17)].map(() => Math.floor(Math.random() * 16).toString(16)).join('').toUpperCase();
 	}
 
-	generateUUID() {
+	static generateUUID() {
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 			const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
 			return v.toString(16);
 		});
 	}
 
-	generateMacAddress() {
+	static generateMacAddress() {
 		const hexDigits = "0123456789ABCDEF";
 		let macAddress = "";
 		for (let i = 0; i < 6; i++) {
@@ -91,22 +94,39 @@ class AppleBootable {
 		return macAddress;
 	}
 
-	spawn(options, size = '128G') {
+	static spawnData() {
+		return Object.assign(this._OPTIONS, {
+			DEVICE_MODEL: this.generateRandomDeviceModel(),
+			SERIAL: this.generateUniqueSerial(),
+			BOARD_SERIAL: this.generateUniqueBoardSerial(),
+			UUID: this.generateUUID().toUpperCase(),
+			MAC_ADDRESS: this.generateMacAddress(),
+		})
+	}
+
+	static spawnDisk(options = undefined, size = '128G') {
+		if (!shell.which("guestfish")) {
+			logger.error(`Sorry, this script requires "guestfish"`, {
+				namespace: 'AppleBootable'
+			});
+
+			process.exit(1);
+		}
+
 		const {
 			DEVICE_MODEL,
 			SERIAL,
 			BOARD_SERIAL,
 			UUID,
 			MAC_ADDRESS,
-			WIDTH = 1920,
-			HEIGHT = 1080,
-			KERNEL_ARGS = '',
 			MASTER_PLIST,
-			OUTPUT_QCOW = `./${SERIAL}.OpenCore-nopicker.qcow2`,
-		} = options;
+			OUTPUT_QCOW = `./${SERIAL}.qcow2`,
+		} = options || this.spawnData()
 
 		return new Promise((resolve, reject) => {
-			logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`);
+			logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`, {
+				namespace: 'AppleBootable'
+			});
 
 			const createImageCommand = [
 				`python3 main.py`,
@@ -136,6 +156,7 @@ class AppleBootable {
 
 			child.stdout.pipe(process.stdout);
 			child.stdin.pipe(process.stdin);
+			child.stderr.pipe(process.stderr);
 
 			child.on('error', function (error) {
 				reject(error);
@@ -143,7 +164,9 @@ class AppleBootable {
 
 			child.on('exit', function (code, signal) {
 				if (code === 0) {
-					logger.info(`💽 image ${OUTPUT_QCOW} created successfully.`);
+					logger.info(`image ${OUTPUT_QCOW} created successfully.`, {
+						namespace: 'AppleBootable'
+					});
 					resolve();
 				} else {
 					console.error({ code, signal });

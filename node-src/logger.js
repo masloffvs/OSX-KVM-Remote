@@ -15,18 +15,8 @@ module.exports = {
 				(info) => {
 					let text = info.message
 
-					if (typeof info.message === 'object') {
-						text = JSON.stringify(info.message)
-
-						if (info.message.request && info.message.response) {
-							const r = info.message.request
-
-							text = `${r.method} (${r.url})`
-						}
-					}
-
-					if (info.vm) {
-						return `${info.timestamp} [${color.fg.yellow(info.vm)}] <${info.level}>: ${
+					if (info.namespace) {
+						return `${info.timestamp} [${info.namespace}] <${info.level}>: ${
 							text
 						}`
 					} else {
