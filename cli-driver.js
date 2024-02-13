@@ -2,6 +2,7 @@ const { program } = require('commander');
 const { input, confirm } = require('@inquirer/prompts');
 const {AppleBootable} = require("./node-src/Foundation/AppleBootable");
 const {logger} = require("./node-src/logger");
+const fs = require("node:fs");
 
 program
 	.option("--size <size>", "Size of disk")
@@ -33,16 +34,26 @@ program
 	})
 
 program
-	.command("spawn-random-bootable-disk")
-	.action(async () => {
+	.command("spawn-random-bootable-disk <name>")
+	.action(async (name) => {
 		const {AppleBootable} = require("./node-src/Foundation/AppleBootable");
 
-		const data = AppleBootable.spawnData()
+		if (!fs.existsSync(`${process.cwd()}/data/generated/`)) {
+			fs.mkdirSync(`${process.cwd()}/data/generated/`, {
+				recursive: true
+			})
+		}
+
+
+		const data = Object.assign(AppleBootable.spawnData(), {
+			OUTPUT_QCOW: `${process.cwd()}/data/generated/${name}.qcow2`
+		})
 
 		AppleBootable
 			.spawnDisk(data)
 			.then(logger.info)
 			.catch(logger.error)
+			.finally(() => process.exit(0))
 	})
 
 

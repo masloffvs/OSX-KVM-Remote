@@ -104,7 +104,11 @@ class AppleBootable {
 		})
 	}
 
-	static spawnDisk(options = undefined, size = '128G') {
+	static spawnDisk(
+		options = undefined,
+		size = '128G',
+		actionSilently = false
+	) {
 		if (!shell.which("guestfish")) {
 			logger.error(`Sorry, this script requires "guestfish"`, {
 				namespace: 'AppleBootable'
@@ -121,7 +125,7 @@ class AppleBootable {
 			MAC_ADDRESS,
 			MASTER_PLIST,
 			OUTPUT_QCOW = `./${SERIAL}.qcow2`,
-		} = options || this.spawnData()
+		} = Object.assign(this.spawnData(), options)
 
 		return new Promise((resolve, reject) => {
 			logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`, {
@@ -140,7 +144,7 @@ class AppleBootable {
 				`--bootpath "${OUTPUT_QCOW}"`
 			].join(" ");
 
-			logger.debug(`${createImageCommand}`, {
+			logger.debug(`running '${createImageCommand}'`, {
 				namespace: "AppleBootable"
 			})
 
@@ -154,22 +158,32 @@ class AppleBootable {
 				}
 			);
 
-			child.stdout.pipe(process.stdout);
-			child.stdin.pipe(process.stdin);
-			child.stderr.pipe(process.stderr);
+			if (!actionSilently) {
+				child.stdout.pipe(process.stdout);
+				child.stdin.pipe(process.stdin);
+				child.stderr.pipe(process.stderr);
+			}
 
 			child.on('error', function (error) {
+				logger.error(`image '${OUTPUT_QCOW}' has error while creating`, {
+					namespace: 'AppleBootable'
+				});
+
 				reject(error);
 			});
 
 			child.on('exit', function (code, signal) {
 				if (code === 0) {
-					logger.info(`image ${OUTPUT_QCOW} created successfully.`, {
+					logger.debug(`image '${OUTPUT_QCOW}' created successfully.`, {
 						namespace: 'AppleBootable'
 					});
+
 					resolve();
 				} else {
-					console.error({ code, signal });
+					logger.error(`image '${OUTPUT_QCOW}' has error while creating`, {
+						namespace: 'AppleBootable'
+					});
+
 					reject(null);
 				}
 			});

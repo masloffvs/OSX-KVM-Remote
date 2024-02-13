@@ -21,7 +21,6 @@ node_modules
 http.json
 serial_sets-*.tsv
 osx-serial-generator/OSX-KVM
-osx-serial-generator/EFI
 /osx-serial-generator/OSX-KVM/
 .env
 .tty
