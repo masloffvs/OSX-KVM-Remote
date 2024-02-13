@@ -18,8 +18,24 @@ class PhantomFile {
 		return randomString;
 	}
 
+	/**
+	 * @deprecated
+	 * @return {string}
+	 */
 	createTempPersistentFile() {
 		const tempPersistentFile = path.normalize(process.cwd() + `/.cache/${this.generateFileID()}.utyp`)
+
+		fs.copyFileSync(this.path, tempPersistentFile)
+
+		return tempPersistentFile
+	}
+
+	createPhantomFile(name = null) {
+		if (!fs.existsSync(`${process.cwd()}/phantoms/`)) {
+			fs.mkdirSync(`${process.cwd()}/phantoms/`)
+		}
+
+		const tempPersistentFile = path.normalize(process.cwd() + `/phantoms/${name || this.generateFileID()}.phantom`)
 
 		fs.copyFileSync(this.path, tempPersistentFile)
 
