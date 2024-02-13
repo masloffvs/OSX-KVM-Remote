@@ -2,7 +2,7 @@
   "name": "osx-kvm-remote",
   "version": "1.0.0",
   "description": "",
-  "main": "main.js",
+  "main": "web-driver.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -15,6 +15,7 @@
     "@rollup/plugin-typescript": "^11.1.6"
   },
   "dependencies": {
+    "@inquirer/prompts": "^4.0.0",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-node-resolve": "^15.2.3",
     "ajv": "^8.12.0",
@@ -35,6 +36,7 @@
     "pidusage": "^3.0.2",
     "request-promise": "^4.2.6",
     "rollup-plugin-flow": "^1.1.1",
+    "shelljs": "^0.8.5",
     "winston": "^3.11.0",
     "winston-timestamp-colorize": "^1.1.0"
   }
