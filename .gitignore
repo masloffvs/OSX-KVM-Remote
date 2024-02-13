@@ -26,3 +26,4 @@ osx-serial-generator/EFI
 .env
 .tty
 data
+phantoms
