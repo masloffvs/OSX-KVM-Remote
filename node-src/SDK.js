@@ -1,4 +1,3 @@
-// Validate virtual machine name and version
 const {Machine} = require("./machines");
 const {vncDisplayArguments, MACHINE_HOST} = require("./helpers/VncDisplay");
 const {appendFileSync, readFileSync, existsSync, writeFileSync} = require("node:fs");
@@ -14,18 +13,17 @@ function validateNameAndVersion(name, version) {
 	if (!['ventura', 'sonoma'].includes(version)) {
 		throw new Error(`Unsupported OS version: ${version}`);
 	}
+
 	if (!/^[a-zA-Z]+$/.test(name)) {
 		throw new Error(`Invalid virtual machine name: ${name}`);
 	}
 }
 
-// Get free disk space in GB
 function getFreeDiskSpace() {
 	const info = disk.checkSync(process.cwd());
 	return info.free / 1024 / 1024 / 1024;
 }
 
-// Check if free space is sufficient
 function checkDiskSpace(freeInGB) {
 	const minFreeSpaceGB = _.get(config, 'reservedSize.min', 30);
 	if (freeInGB < minFreeSpaceGB) {
@@ -33,7 +31,6 @@ function checkDiskSpace(freeInGB) {
 	}
 }
 
-// Check if the virtual machine already exists
 function checkIfVMExists(name) {
 	const snapshotFilePath = normalize(process.cwd() + '/.snapshots/' + md5(name) + '.json');
 	if (existsSync(snapshotFilePath)) {
@@ -41,7 +38,6 @@ function checkIfVMExists(name) {
 	}
 }
 
-// Increment VNC port and save it
 function incrementVNCPort() {
 	const port = parseInt(String(readFileSync('.vnc-port')));
 	const newVncPort = String(port + _.get(config, 'vncEveryNewInstanceStep', 1));
@@ -49,7 +45,6 @@ function incrementVNCPort() {
 	return newVncPort;
 }
 
-// Set up VNC arguments
 function getVNCArguments(port) {
 	return Object.freeze({
 		host: MACHINE_HOST,
@@ -57,20 +52,20 @@ function getVNCArguments(port) {
 	});
 }
 
-// Create virtual machine image
 async function createVMImage(name) {
 	const hddSrc = normalize(process.cwd() + `/data/hdd/DATA_${name}.img`);
 	const imageCreator = new ImgCreator(
 		hddSrc,
 		_.get(config, 'defaultMacStorageSize', '256G')
 	);
+
 	await imageCreator.createImage();
+
 	fs.accessSync(hddSrc);
 
 	return hddSrc
 }
 
-// Launch virtual machine based on the specified version
 async function buildVirtualMachine(version, vncArgs, name, hddSrc) {
 	const bootdiskSrc = normalize(process.cwd() + `/data/bootable/BOOT_${name}.qcow2`);
 	const opt = {
@@ -89,7 +84,6 @@ async function buildVirtualMachine(version, vncArgs, name, hddSrc) {
 	}
 }
 
-// Write snapshot file
 function writeSnapshotFile(name, vncArgs, proc) {
 	const snapshotFilePath = normalize(process.cwd() + '/.snapshots/' + md5(name) + '.json');
 
