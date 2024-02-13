@@ -17,14 +17,14 @@ class NetDevice {
 
 	getNetdevConfig() {
 		if (this.hostfwdPort && this.guestPort) {
-			return `-netdev user,id=${this.id},hostfwd=tcp::${this.hostfwdPort}-:${this.guestPort}`;
+			return [`-netdev`, `user,id=${this.id},hostfwd=tcp::${this.hostfwdPort}-:${this.guestPort}`];
 		} else {
-			return `-netdev user,id=${this.id}`;
+			return ['-netdev', `user,id=${this.id}`];
 		}
 	}
 
 	getDeviceConfig() {
-		return `-device vmxnet3,netdev=${this.id},id=${this.id},mac=${this.macAddress}`;
+		return ['-device', `vmxnet3,netdev=${this.id},id=${this.id},mac=${this.macAddress}`];
 	}
 
 	getConfig() {
@@ -48,14 +48,14 @@ class NetDeviceWithMultiplyForward {
 		})
 
 		if (forward) {
-			return `-netdev user,id=${this.id}`;
+			return ['-netdev', `user,id=${this.id}`];
 		} else {
-			return `-netdev user,id=${this.id},${forward.join(",")}`;
+			return [`-netdev`, `user,id=${this.id},${forward.join(",")}`];
 		}
 	}
 
 	getDeviceConfig() {
-		return `-device vmxnet3,netdev=${this.id},id=${this.id},mac=${this.macAddress}`;
+		return ['-device', `vmxnet3,netdev=${this.id},id=${this.id},mac=${this.macAddress}`];
 	}
 
 	getConfig() {
