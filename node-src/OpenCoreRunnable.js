@@ -1,4 +1,5 @@
 const { exec } = require('node:child_process');
+const _ = require("lodash");
 
 class QemuOpenCoreRunnable {
 	_args = undefined
@@ -76,32 +77,34 @@ class QemuOpenCoreRunnable {
 			} = this.options;
 
 			const cpuOptions = `kvm=${kvm ? 'on' : 'off'},vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,${additionalCpuOptions}`;
+
 			const networkDeviceArgs = networkDevices.flatMap(device => device.getConfig());
 			const storageDeviceArgs = storageDevices.map(device => device.getQemuDriveConfig());
 
 			this._args = Object.freeze([
-				kvm ? '-enable-kvm' : '',
-				'-m', allocatedRam,
-				'-cpu', `${cpuType},${cpuOptions}`,
-				'-machine', 'q35',
-				...usbDevices,
-				nographic,
-				...ahciDevice,
-				...audioDevices,
-				'-smp', `${cpuThreads},cores=${cpuCores},sockets=${cpuSockets}`,
-				...storageDeviceArgs,
-				...networkDeviceArgs,
-				...displayDevices,
-				...customDeviceParams,
-				...otherArgs
+				[kvm ? '-enable-kvm' : undefined],
+				['-m', allocatedRam, '-cpu', `${cpuType},${cpuOptions}`, '-machine', 'q35', (nographic || undefined)],
+				['-smp', `${cpuThreads},cores=${cpuCores},sockets=${cpuSockets}`],
+				...(usbDevices || []),
+				...(ahciDevice || []),
+				...(audioDevices || []),
+				...(storageDeviceArgs || []),
+				...(networkDeviceArgs || []),
+				...(displayDevices || []),
+				...(customDeviceParams || []),
+				...(otherArgs || [])
 			]);
 		}
 
 		return this._args
 	}
 
-	getArgs() {
-		return this._buildArgs()
+	getArgs(flatten = true) {
+		if (flatten) {
+			return _.flatten(this._buildArgs()).filter(it => it)
+		} else {
+			return this._buildArgs()
+		}
 	}
 
 	setArgs(args) {
