@@ -20,6 +20,7 @@ if sudo -v; then
       # Installing required packages
       echo "[APT_INSTALL]: Installing required packages..."
       sudo apt install libguestfs-tools build-essential wget git gcc uuid-runtime sudo -y
+      sudo apt-get install libxml2-utils -y
 
       # Installing Linux kernel
       echo "[APT_INSTALL]: Installing Linux kernel..."
