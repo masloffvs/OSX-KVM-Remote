@@ -62,7 +62,11 @@ if sudo -v; then
         echo "[CHECK_NODE_VERSION]: Node.js version is acceptable: $NODE_VERSION"
     else
         echo "[CHECK_NODE_VERSION]: Node.js version ($NODE_VERSION) is not greater than $REQUIRED_VERSION. Please update Node.js."
-        exit 1
+        echo "[INSTALL_NVM]: Installing nvm"
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        nvm install 18
+        nvm use 18
+        nvm alias default 18
     fi
 
     # Checking Python version
