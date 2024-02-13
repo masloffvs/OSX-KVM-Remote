@@ -44,10 +44,11 @@ program
 			})
 		}
 
-
 		const data = Object.assign(AppleBootable.spawnData(), {
 			OUTPUT_QCOW: `${process.cwd()}/data/generated/${name}.qcow2`
 		})
+
+		logger.debug(JSON.stringify(data, null, 2))
 
 		AppleBootable
 			.spawnDisk(data)
