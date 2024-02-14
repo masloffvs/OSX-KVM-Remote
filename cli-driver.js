@@ -190,6 +190,13 @@ program
 	})
 
 program
+	.command("killall-qemu-instances")
+	.description('Kill all instances of QEMU')
+	.action(async () => {
+		console.log(require('kill-process-by-name')("qemu-system-x86_64"))
+	})
+
+program
 	.command("show-vm <name>")
 	.description('Show virtual machine')
 	.action(async (name) => {
