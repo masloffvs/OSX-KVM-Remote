@@ -356,7 +356,8 @@ program
 		if (!fs.existsSync(qcowUri)) {
 			if (await confirm({ message: "Generate random MacOS data?", default: true })) {
 				const data = Object.assign(AppleBootable.spawnData(), {
-					OUTPUT_QCOW: qcowUri
+					OUTPUT_QCOW: qcowUri,
+					MASTER_PLIST: './config-custom.plist.plist'
 				})
 
 				logger.debug(JSON.stringify(data, null, 2))
