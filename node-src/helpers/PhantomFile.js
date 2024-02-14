@@ -35,11 +35,22 @@ class PhantomFile {
 			fs.mkdirSync(`${process.cwd()}/phantoms/`)
 		}
 
-		const tempPersistentFile = path.normalize(process.cwd() + `/phantoms/${name || this.generateFileID()}.phantom`)
+		if (name) {
+			const tempPersistentFile = path.normalize(process.cwd() + `/phantoms/${name || this.generateFileID()}.phantom`)
 
-		fs.copyFileSync(this.path, tempPersistentFile)
+			if (!fs.existsSync(tempPersistentFile)) {
+				fs.copyFileSync(this.path, tempPersistentFile)
+			}
 
-		return tempPersistentFile
+			return tempPersistentFile
+		} else {
+			const tempPersistentFile = path.normalize(process.cwd() + `/phantoms/${name || this.generateFileID()}.phantom`)
+
+			fs.copyFileSync(this.path, tempPersistentFile)
+
+			return tempPersistentFile
+		}
+
 	}
 }
 
