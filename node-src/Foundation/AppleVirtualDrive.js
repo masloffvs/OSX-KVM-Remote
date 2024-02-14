@@ -1,6 +1,7 @@
 const {Throwable} = require("../Throwable");
 const _ = require("lodash");
 const {existsSync} = require("node:fs")
+const {PhantomFile} = require("../helpers/PhantomFile");
 
 class AppleVirtualDrive {
 	_name = ''
@@ -77,6 +78,15 @@ class AppleVirtualDrive {
 		})
 	}
 
+	makeIOSafe() {
+		const phantomSrc = new PhantomFile({
+			path: this._src
+		})
+
+		this._src = phantomSrc.createPhantomFile("DISK_IO_SAFE" + this._name)
+
+		return this
+	}
 
 	constructor(params) {
 		const { src, name, size, type, label, options } = params
