@@ -16,6 +16,7 @@ const {PhantomFile} = require("./node-src/helpers/PhantomFile");
 const {AppleBootableHub} = require("./node-src/Foundation/AppleBootableHub");
 
 createFolderIfNotExists('data')
+createFolderIfNotExists('data/generated')
 createFolderIfNotExists('data/bootable')
 createFolderIfNotExists('data/hdd')
 
@@ -362,12 +363,12 @@ program
 
 				await AppleBootable.spawnDisk(data)
 
-				prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true)
+				prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true, "OpenCoreBoot")
 			} else {
 				prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
 			}
 		} else {
-			prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true)
+			prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true, "OpenCoreBoot")
 		}
 
 		const operationSystemDrive = {
