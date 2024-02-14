@@ -34,6 +34,7 @@
     "express-react-views": "^0.11.0",
     "express-requests-logger": "^4.0.0",
     "find-free-ports": "^3.1.1",
+    "kill-process-by-name": "^1.0.5",
     "leveldown": "^6.1.1",
     "levelup": "^5.1.1",
     "lodash": "^4.17.21",
