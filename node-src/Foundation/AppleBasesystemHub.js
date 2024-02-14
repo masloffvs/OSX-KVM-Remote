@@ -12,6 +12,17 @@ const appleBaseSystemHub = () => ({
 			_if: "none",
 			_snapshot: 'on'
 		}
+	),
+	Ventura: AppleVirtualDrive.of(
+		normalize(`${process.cwd()}/prebuilt/basesystems/BaseSystem-Ventura.img`),
+		'InstallMedia',
+		undefined,
+		'raw',
+		'InstallMedia',
+		{
+			_if: "none",
+			_snapshot: 'on'
+		}
 	)
 })
 
