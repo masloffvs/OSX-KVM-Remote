@@ -52,7 +52,7 @@ class QemuOpenCoreRunnable {
 		};
 
 		if (!['Haswell-noTSX', "Penryn"].includes(this.options.cpuType)) {
-			throw "The processor parameter 'cpuTypeс' is incorrect"
+			throw "The processor parameter 'cpuType' is incorrect"
 		}
 
 		// Callbacks for events
@@ -62,6 +62,8 @@ class QemuOpenCoreRunnable {
 		this.onStdoutData = options.onStdoutData || undefined;
 		this.onStdinData = options.onStdinData || undefined;
 	}
+
+
 
 	/**
 	 * Builds the command-line arguments for running the virtual machine.
