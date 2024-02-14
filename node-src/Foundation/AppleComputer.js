@@ -298,7 +298,7 @@ class AppleComputer extends UnixVirtualization {
 	}
 
 	spawnAndRunComputer() {
-		return this.run(this.spawnQemuArguments())
+		return this.run(this.spawnQemuArguments(), {silent: false})
 	}
 }
 
