@@ -400,7 +400,7 @@ program
 			.setVersionSystem(operationSystemVersion)
 			.setDrive(AppleBootableHub.prebuilt.makeIOSafe())
 			.setDrive(operationSystemDrive)
-			.setDrive(developerKit, 6)
+			.setDrive(developerKit, 5)
 			.setDataDrive(dataDisk.toVirtualDrive(true, "MacHDD")) // should be MacHDD
 			.setDisplay('sdl')
 			// .useAppleKvm()
