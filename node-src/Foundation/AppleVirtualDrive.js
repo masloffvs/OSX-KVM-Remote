@@ -35,7 +35,7 @@ class AppleVirtualDrive {
 	}
 
 	static of(src, name, size, type, label, options) {
-		if (options.if_ && !['ide', 'scsi', 'virtio', 'none'].includes(options.if_)) {
+		if (options && options.if_ && !['ide', 'scsi', 'virtio', 'none'].includes(options.if_)) {
 			throw new Throwable(
 				"Invalid virtual drive interface specified. Supported interfaces are: ide, scsi, virtio, none.",
 				AppleVirtualDrive,
@@ -46,7 +46,7 @@ class AppleVirtualDrive {
 			)
 		}
 
-		if (options._snapshot && !['on', 'off'].includes(options._snapshot)) {
+		if (options && options._snapshot && !['on', 'off'].includes(options._snapshot)) {
 			throw new Throwable(
 				"Invalid virtual drive snapshot specified. Supported snapshot value are: on/off",
 				AppleVirtualDrive,

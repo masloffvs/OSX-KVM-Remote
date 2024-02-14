@@ -362,12 +362,12 @@ program
 
 				await AppleBootable.spawnDisk(data)
 
-				prebuiltBootableDiskUri = AppleVirtualDrive.of(qcowUri)
+				prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true)
 			} else {
 				prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
 			}
 		} else {
-			prebuiltBootableDiskUri = AppleVirtualDrive.of(qcowUri)
+			prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true)
 		}
 
 		const operationSystemDrive = {
