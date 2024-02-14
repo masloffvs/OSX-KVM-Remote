@@ -26,3 +26,7 @@ osx-serial-generator/OSX-KVM
 .tty
 data
 phantoms
+
+local_*.sh
+local/*
+local
