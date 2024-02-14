@@ -128,7 +128,7 @@ class AppleBootable {
 		} = Object.assign(this.spawnData(), options)
 
 		return new Promise((resolve, reject) => {
-			logger.info(`💽 creating '${OUTPUT_QCOW}' disk... wait a bit`, {
+			logger.info(`creating '${OUTPUT_QCOW}' disk... wait a bit`, {
 				namespace: 'AppleBootable'
 			});
 
@@ -178,7 +178,7 @@ class AppleBootable {
 						namespace: 'AppleBootable'
 					});
 
-					resolve();
+					resolve(true);
 				} else {
 					logger.error(`image '${OUTPUT_QCOW}' has error while creating`, {
 						namespace: 'AppleBootable'

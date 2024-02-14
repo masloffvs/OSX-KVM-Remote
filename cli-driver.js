@@ -13,6 +13,7 @@ const {createFolderIfNotExists, checkFileExists} = require("./node-src/boot");
 const {config} = require("./node-src/config");
 const {AppleDisk} = require("./node-src/Foundation/AppleDisk");
 const {PhantomFile} = require("./node-src/helpers/PhantomFile");
+const {AppleBootableHub} = require("./node-src/Foundation/AppleBootableHub");
 
 createFolderIfNotExists('data')
 createFolderIfNotExists('data/bootable')
@@ -103,11 +104,6 @@ program
 		console.log(disk.dump())
 	})
 
-program
-	.command("prebuilt-disks")
-	.action(async (name) => {
-		// console.log(AppleBaseSystemHub)
-	})
 
 program
 	.command("spawn-random-bootable-data")
@@ -352,6 +348,25 @@ program
 			],
 		})
 
+		let prebuiltBootableDiskUri
+
+		if (await confirm({ message: "Generate random MacOS data?", default: true })) {
+			const qcowUri = `${process.cwd()}/data/generated/HOTSPAWN_${name}.qcow2`
+
+			const data = Object.assign(AppleBootable.spawnData(), {
+				OUTPUT_QCOW: qcowUri
+			})
+
+			logger.debug(JSON.stringify(data, null, 2))
+
+			await AppleBootable.spawnDisk(data)
+
+			prebuiltBootableDiskUri = AppleVirtualDrive.of(qcowUri)
+
+		} else {
+			prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
+		}
+
 		const operationSystemDrive = {
 			sonoma: AppleBaseSystemHub.Sonoma,
 			ventura: AppleBaseSystemHub.Ventura,
@@ -398,7 +413,7 @@ program
 		computer
 			.setRam(ram)
 			.setVersionSystem(operationSystemVersion)
-			.setDrive(AppleBootableHub.prebuilt.makeIOSafe())
+			.setDrive(prebuiltBootableDiskUri)
 			.setDrive(operationSystemDrive)
 			.setDrive(developerKit, 5)
 			.setDataDrive(dataDisk.toVirtualDrive(true, "MacHDD")) // should be MacHDD
