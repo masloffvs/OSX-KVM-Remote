@@ -336,6 +336,22 @@ program
 			],
 		})
 
+		const vncHost =  await select({
+			message: 'Select a VNC-host',
+			choices: [
+				{
+					name: 'localhost (127.0.0.1)',
+					value: '127.0.0.1',
+					description: "VNC is ONLY available on YOUR computer"
+				},
+				{
+					name: 'shared (0.0.0.0)',
+					value: '0.0.0.0',
+					description: 'VNC is available to EVERYONE who is on the local and global network',
+				},
+			],
+		})
+
 		const operationSystemDrive = {
 			sonoma: AppleBaseSystemHub.Sonoma,
 			ventura: AppleBaseSystemHub.Ventura,
@@ -356,7 +372,24 @@ program
 			choices: disks
 		})
 
+		let developerKit = undefined
+
+		if (fs.existsSync(`${process.cwd()}/prebuilt/DeveloperKit.iso`)) {
+			const connectDeveloperKit = await confirm({
+				message: 'Would you like to connect DeveloperKit to your machine?',
+			})
+
+			if (connectDeveloperKit) {
+				developerKit = AppleDisk.ofDvDIso(
+					`${process.cwd()}/prebuilt/DeveloperKit.iso`,
+					'DeveloperKitIso'
+				)
+			}
+		}
+
 		const dataDisk = new AppleDisk()
+
+		logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
 
 		dataDisk.useExistDisk(dataDrive.createPhantomFile(`HOTSPAWN_${name}`))
 
@@ -367,12 +400,13 @@ program
 			.setVersionSystem(operationSystemVersion)
 			.setDrive(AppleBootableHub.prebuilt.makeIOSafe())
 			.setDrive(operationSystemDrive)
+			.setDrive(developerKit, 6)
 			.setDataDrive(dataDisk.toVirtualDrive(true, "MacHDD")) // should be MacHDD
 			.setDisplay('sdl')
 			// .useAppleKvm()
 			.setEnableGraphic(false)
 			.setHypervisorVmxConfig(true, true)
-			.setEnableVnc('127.0.0.1', 1)
+			.setEnableVnc(vncHost, 1)
 			.setOvmf(AppleOVMF.ovmfCodeFile)
 			.setOvmf(AppleOVMF.ovmfVars1024x768File)
 
