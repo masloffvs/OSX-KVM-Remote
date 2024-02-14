@@ -35,6 +35,52 @@ class AppleDisk {
 		return appleDisk
 	}
 
+	useExistDisk(path, name = undefined, type = 'qcow2', filetype = 'img') {
+		this._name = name
+		this._type = type
+		this._filetype = filetype
+
+		this._src = normalize(path)
+
+		if (!isAbsolute(this._src)) {
+			throw new Throwable("The path to the disk must be absolute", AppleDisk, {
+				classdump: this
+			})
+		}
+
+		return this
+	}
+
+	static isExistsDisk(name, filetype = 'img') {
+		return fs.existsSync(
+			normalize(join(AppleDisk.BASEPATH, `AppleDataDrive-${String(name).toLowerCase()}.${filetype}`))
+		)
+	}
+
+	isExist() {
+		return fs.existsSync(this._src)
+	}
+
+	static ofDvDIso(path, id) {
+		return AppleVirtualDrive.of(
+			path,
+			id,
+			undefined,
+			"raw",
+			id,
+			{
+				_if: 'none',
+				_snapshot: 'off'
+			}
+		)
+	}
+
+	setSize(size = '128G') {
+		this._size = size
+
+		return this
+	}
+
 	create(name, type = 'qcow2', filetype = 'img') {
 		this._name = name
 		this._type = type
@@ -51,7 +97,12 @@ class AppleDisk {
 		return this
 	}
 
-	async spawnImage(forceWrite= false) {
+	async spawnImage(forceWrite= false, skipSpawningIfDiskExists = false) {
+		if (skipSpawningIfDiskExists && fs.existsSync(this._src)) {
+			return this
+		}
+
+
 		const execPromise = util.promisify(exec);
 		const createImageCommand = `qemu-img create -f ${this._type} ${this._src} ${this._size}`;
 
