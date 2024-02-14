@@ -350,9 +350,9 @@ program
 
 		let prebuiltBootableDiskUri
 
-		if (await confirm({ message: "Generate random MacOS data?", default: true })) {
-			const qcowUri = `${process.cwd()}/data/generated/HOTSPAWN_${name}.qcow2`
+		const qcowUri = `${process.cwd()}/data/generated/HOTSPAWN_${name}.qcow2`
 
+		if (!fs.existsSync(qcowUri) && await confirm({ message: "Generate random MacOS data?", default: true })) {
 			const data = Object.assign(AppleBootable.spawnData(), {
 				OUTPUT_QCOW: qcowUri
 			})
