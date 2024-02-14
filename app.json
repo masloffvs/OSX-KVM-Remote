@@ -1,0 +1,7 @@
+{
+  "database": {
+    "levelup": {
+      "path": "{PWD}/data/levelup"
+    }
+  }
+}
