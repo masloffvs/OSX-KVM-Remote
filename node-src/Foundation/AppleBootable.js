@@ -2,6 +2,7 @@ const path = require("node:path");
 const {logger} = require("../logger");
 const {exec} = require("node:child_process");
 const shell = require("shelljs");
+const fs = require("node:fs");
 
 class AppleBootable {
 	static _DEFAULT_PLIST = path.normalize(process.cwd() + '/osx-serial-generator/config-nopicker-custom.plist')
@@ -177,6 +178,8 @@ class AppleBootable {
 					logger.debug(`image '${OUTPUT_QCOW}' created successfully.`, {
 						namespace: 'AppleBootable'
 					});
+
+					fs.accessSync(OUTPUT_QCOW)
 
 					resolve(true);
 				} else {
