@@ -358,7 +358,7 @@ program
 		computer
 			.setRam(ram)
 			.setVersionSystem(operationSystemVersion)
-			.setDrive(AppleBootableHub.prebuilt)
+			.setDrive(AppleBootableHub.prebuilt.makeIOSafe())
 			.setDrive(operationSystemDrive)
 			.setDataDrive(dataDisk.toVirtualDrive(true, "MacHDD")) // should be MacHDD
 			.setDisplay('sdl')
