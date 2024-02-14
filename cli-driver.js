@@ -352,19 +352,22 @@ program
 
 		const qcowUri = `${process.cwd()}/data/generated/HOTSPAWN_${name}.qcow2`
 
-		if (!fs.existsSync(qcowUri) && await confirm({ message: "Generate random MacOS data?", default: true })) {
-			const data = Object.assign(AppleBootable.spawnData(), {
-				OUTPUT_QCOW: qcowUri
-			})
+		if (!fs.existsSync(qcowUri)) {
+			if (await confirm({ message: "Generate random MacOS data?", default: true })) {
+				const data = Object.assign(AppleBootable.spawnData(), {
+					OUTPUT_QCOW: qcowUri
+				})
 
-			logger.debug(JSON.stringify(data, null, 2))
+				logger.debug(JSON.stringify(data, null, 2))
 
-			await AppleBootable.spawnDisk(data)
+				await AppleBootable.spawnDisk(data)
 
-			prebuiltBootableDiskUri = AppleVirtualDrive.of(qcowUri)
-
+				prebuiltBootableDiskUri = AppleVirtualDrive.of(qcowUri)
+			} else {
+				prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
+			}
 		} else {
-			prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
+			prebuiltBootableDiskUri = AppleVirtualDrive.of(qcowUri)
 		}
 
 		const operationSystemDrive = {
