@@ -260,6 +260,8 @@ program
 			)
 		}
 
+		logger.debug('Running...')
+
 		computer
 			.setRam(ram)
 			.setVersionSystem(operationSystemVersion)
@@ -350,6 +352,8 @@ program
 		const dataDisk = new AppleDisk()
 
 		dataDisk.useExistDisk(dataDrive.createPhantomFile(`HOTSPAWN_${name}`))
+
+		logger.debug('Running...')
 
 		computer
 			.setRam(ram)
