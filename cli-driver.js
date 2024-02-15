@@ -415,6 +415,9 @@ program
 		copySync(
 			String(dataDrive),
 			dataDriveReadyUri,
+			{
+				override: false
+			}
 		)
 
 		dataDisk.useExistDisk(dataDriveReadyUri)
