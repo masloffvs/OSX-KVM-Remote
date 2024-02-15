@@ -410,15 +410,14 @@ program
 
 		const dataDriveReadyUri = `${process.cwd()}/data/hdd/HOTSPAWN_${name}`
 
-		logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
+		if (!fs.existsSync(dataDriveReadyUri)) {
+			logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
 
-		copySync(
-			String(dataDrive),
-			dataDriveReadyUri,
-			{
-				override: false
-			}
-		)
+			copySync(
+				String(dataDrive),
+				dataDriveReadyUri
+			)
+		}
 
 		dataDisk.useExistDisk(dataDriveReadyUri)
 
