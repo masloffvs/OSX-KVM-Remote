@@ -1,3 +1,4 @@
+const { copySync } = require('fs-extra');
 const { program } = require('commander');
 const { input, select, confirm } = require('@inquirer/prompts');
 const {AppleBootable} = require("./node-src/Foundation/AppleBootable");
@@ -14,7 +15,6 @@ const {config} = require("./node-src/config");
 const {AppleDisk} = require("./node-src/Foundation/AppleDisk");
 const {PhantomFile} = require("./node-src/helpers/PhantomFile");
 const {AppleBootableHub} = require("./node-src/Foundation/AppleBootableHub");
-const {copyFile} = require("copy-file");
 
 createFolderIfNotExists('data')
 createFolderIfNotExists('data/generated')
@@ -408,20 +408,14 @@ program
 
 		const dataDisk = new AppleDisk()
 
+		const dataDriveReadyUri = `${process.cwd()}/data/hdd/HOTSPAWN_${name}`
+
 		logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
 
-		const dataDriveReadyUri = await copyFile(
+		copySync(
 			String(dataDrive),
-			`${process.cwd()}/data/hdd/HOTSPAWN_${name}`,
-			{
-				overwrite: false,
-				onProgress: p => {
-					if (Math.round(p.percent) % 10 || p.percent < 5) {
-						logger.debug(`The disk is created at ${p.percent}%`)
-					}
-				}
-			}
-		);
+			dataDriveReadyUri,
+		)
 
 		dataDisk.useExistDisk(dataDriveReadyUri)
 
