@@ -15,6 +15,7 @@ const {config} = require("./node-src/config");
 const {AppleDisk} = require("./node-src/Foundation/AppleDisk");
 const {PhantomFile} = require("./node-src/helpers/PhantomFile");
 const {AppleBootableHub} = require("./node-src/Foundation/AppleBootableHub");
+const path = require("node:path");
 
 createFolderIfNotExists('data')
 createFolderIfNotExists('data/generated')
@@ -408,15 +409,28 @@ program
 
 		const dataDisk = new AppleDisk()
 
-		const dataDriveReadyUri = `${process.cwd()}/data/hdd/HOTSPAWN_${name}`
+		let dataDriveReadyUri = `${process.cwd()}/data/hdd/HOTSPAWN_${name}`
 
-		if (!fs.existsSync(dataDriveReadyUri)) {
-			logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
+		if (await confirm({message: "Do you want to use a ready-made hard disk image file with data in a non-standard location?"})) {
+			while (true) {
+				const pathToDisk = await input({message: "Path"})
 
-			copySync(
-				String(dataDrive),
-				dataDriveReadyUri
-			)
+				if (path.isAbsolute(pathToDisk) && fs.existsSync(pathToDisk)) {
+					dataDriveReadyUri = path.normalize(pathToDisk)
+					break
+				} else {
+					logger.debug("Disk not found at this path or path is non absolute")
+				}
+			}
+		} else {
+			if (!fs.existsSync(dataDriveReadyUri)) {
+				logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
+
+				copySync(
+					String(dataDrive),
+					dataDriveReadyUri
+				)
+			}
 		}
 
 		dataDisk.useExistDisk(dataDriveReadyUri)
