@@ -22,6 +22,9 @@ createFolderIfNotExists('data/generated')
 createFolderIfNotExists('data/bootable')
 createFolderIfNotExists('data/hdd')
 
+createFolderIfNotExists('prebuilt')
+createFolderIfNotExists('prebuilt/hotdata')
+
 checkFileExists(process.cwd() + "/OVMF_VARS-1024x768.fd")
 checkFileExists(process.cwd() + "/OVMF_CODE.fd")
 checkFileExists(process.cwd() + "/.vnc-port")
@@ -310,6 +313,11 @@ program
 
 		const computer = new AppleComputer()
 
+		if (_.size(fs.readdirSync(`${process.cwd()}/prebuilt/hotdata`)) === 0) {
+			logger.error("")
+			process.exit(1)
+		}
+
 		const ram = parseInt(await select({
 			message: 'Select the amount of RAM',
 			choices: _.range(1024, 1024 * 32, 1024).map(size => ({
@@ -322,17 +330,17 @@ program
 		const operationSystemVersion =  await select({
 			message: 'Select a operation system',
 			choices: [
-				{
+				fs.existsSync(`${process.cwd()}/prebuilt/hotdata/Sonoma.img`) ? {
 					name: 'sonoma',
 					value: 'sonoma',
 					description: 'macOS Sonoma 14.0',
-				},
-				{
+				} : null,
+				fs.existsSync(`${process.cwd()}/prebuilt/hotdata/Ventura.img`) ? {
 					name: 'ventura',
 					value: 'ventura',
 					description: 'macOS Ventura 13.0',
-				},
-			],
+				} : null,
+			].filter(i => i != null),
 		})
 
 		const vncHost =  await select({
@@ -349,6 +357,19 @@ program
 					description: 'VNC is available to EVERYONE who is on the local and global network',
 				},
 			],
+		})
+
+		const disks = fs.readdirSync(`${process.cwd()}/prebuilt/hotdata`).map(path => ({
+			name: path,
+			value: `${process.cwd()}/prebuilt/hotdata/${path}`
+		}))
+
+		/**
+		 * @type {PhantomFile} dataDrive
+		 */
+		const dataDrive = await select({
+			message: 'Select HotData drive',
+			choices: disks
 		})
 
 		const hotspawnDiskType =  await select({
@@ -371,62 +392,6 @@ program
 				},
 			],
 		})
-
-		let prebuiltBootableDiskUri
-
-		const qcowUri = `${process.cwd()}/data/bootable/HOTSPAWN_${name}.qcow2`
-
-		if (!fs.existsSync(qcowUri)) {
-			if (await confirm({ message: "Generate random MacOS data?", default: true })) {
-				const data = Object.assign(AppleBootable.spawnData(), {
-					OUTPUT_QCOW: qcowUri,
-					MASTER_PLIST: './config-custom.plist'
-				})
-
-				logger.debug(JSON.stringify(data, null, 2))
-
-				await AppleBootable.spawnDisk(data)
-
-				prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true, "OpenCoreBoot")
-			} else {
-				prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
-			}
-		} else {
-			prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true, "OpenCoreBoot")
-		}
-
-		const operationSystemDrive = {
-			sonoma: AppleBaseSystemHub.Sonoma,
-			ventura: AppleBaseSystemHub.Ventura,
-		}[operationSystemVersion]
-
-		const disks = fs.readdirSync(`${process.cwd()}/data/hotdata`).map(path => ({
-			name: path,
-			value: `${process.cwd()}/data/hotdata/${path}`
-		}))
-
-		/**
-		 * @type {PhantomFile} dataDrive
-		 */
-		const dataDrive = await select({
-			message: 'Select HotData drive',
-			choices: disks
-		})
-
-		let developerKit = undefined
-
-		if (fs.existsSync(`${process.cwd()}/prebuilt/DeveloperKit.iso`)) {
-			const connectDeveloperKit = await confirm({
-				message: 'Would you like to connect DeveloperKit to your machine?',
-			})
-
-			if (connectDeveloperKit) {
-				developerKit = AppleDisk.ofDvDIso(
-					`${process.cwd()}/prebuilt/DeveloperKit.iso`,
-					'DeveloperKitIso'
-				)
-			}
-		}
 
 		const dataDisk = new AppleDisk()
 
@@ -481,6 +446,53 @@ program
 		}
 
 		dataDisk.useExistDisk(dataDriveReadyUri)
+
+		let prebuiltBootableDiskUri
+
+		const qcowUri = `${process.cwd()}/data/bootable/HOTSPAWN_${name}.qcow2`
+
+		if (!fs.existsSync(qcowUri)) {
+			if (await confirm({ message: "Generate random MacOS data?", default: true })) {
+				const data = Object.assign(AppleBootable.spawnData(), {
+					OUTPUT_QCOW: qcowUri,
+					MASTER_PLIST: './config-custom.plist'
+				})
+
+				logger.debug(JSON.stringify(data, null, 2))
+
+				await AppleBootable.spawnDisk(data)
+
+				prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true, "OpenCoreBoot")
+			} else {
+				prebuiltBootableDiskUri = AppleBootableHub.prebuilt.makeIOSafe()
+			}
+		} else {
+			prebuiltBootableDiskUri = (new AppleDisk()).useExistDisk(qcowUri).toVirtualDrive(true, "OpenCoreBoot")
+		}
+
+		const operationSystemDrive = {
+			sonoma: AppleBaseSystemHub.Sonoma,
+			ventura: AppleBaseSystemHub.Ventura,
+		}[operationSystemVersion]
+
+		let developerKit = undefined
+
+		if (fs.existsSync(`${process.cwd()}/prebuilt/DeveloperKit.iso`)) {
+			const connectDeveloperKit = await confirm({
+				message: 'Would you like to connect DeveloperKit to your machine?',
+			})
+
+			if (connectDeveloperKit) {
+				developerKit = AppleDisk.ofDvDIso(
+					`${process.cwd()}/prebuilt/DeveloperKit.iso`,
+					'DeveloperKitIso'
+				)
+			}
+		}
+
+		if (await confirm({message: "Save the current virtual machine configuration?"})) {
+
+		}
 
 		logger.debug('Running...')
 
