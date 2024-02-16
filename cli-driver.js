@@ -351,9 +351,30 @@ program
 			],
 		})
 
+		const hotspawnDiskType =  await select({
+			message: 'Please select the data disk type that suits you best',
+			choices: [
+				{
+					name: 'Storage',
+					value: 'storage',
+					description: "We will copy the HotSpawn image to the internal memory of the AppleComputer in the folder data/hdd/HOTSPAW_* or load this"
+				},
+				{
+					name: 'Use exist',
+					value: 'useExists',
+					description: 'Use a ready-made HotSpawn image on a remote storage from a folder',
+				},
+				{
+					name: 'External',
+					value: 'external',
+					description: 'Generate the image in the path you specify. Provide the full route with the .qcow file format. Example: /absolute/url/to/file/disk.qcow',
+				},
+			],
+		})
+
 		let prebuiltBootableDiskUri
 
-		const qcowUri = `${process.cwd()}/data/generated/HOTSPAWN_${name}.qcow2`
+		const qcowUri = `${process.cwd()}/data/bootable/HOTSPAWN_${name}.qcow2`
 
 		if (!fs.existsSync(qcowUri)) {
 			if (await confirm({ message: "Generate random MacOS data?", default: true })) {
@@ -411,7 +432,7 @@ program
 
 		let dataDriveReadyUri = `${process.cwd()}/data/hdd/HOTSPAWN_${name}`
 
-		if (await confirm({message: "Do you want to use a ready-made hard disk image file with data in a non-standard location?"})) {
+		if (hotspawnDiskType === 'useExists') {
 			while (true) {
 				const pathToDisk = await input({message: "Path"})
 
@@ -422,7 +443,33 @@ program
 					logger.debug("Disk not found at this path or path is non absolute")
 				}
 			}
-		} else {
+
+		} else if (hotspawnDiskType === 'external') {
+			while (true) {
+				const pathToDisk = await input({message: "Path (override: on)"})
+
+				if (path.isAbsolute(pathToDisk)) {
+					if (!fs.existsSync(pathToDisk)) {
+						logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
+
+						copySync(
+							String(dataDrive),
+							pathToDisk
+						)
+					}
+
+					fs.accessSync(pathToDisk)
+
+					dataDriveReadyUri = pathToDisk
+
+					break
+				} else {
+					logger.debug("Disk already exists at this path or path is non absolute")
+				}
+			}
+		} else if (hotspawnDiskType === 'storage') {
+			dataDriveReadyUri = `${process.cwd()}/data/hdd/HOTSPAWN_${name}`
+
 			if (!fs.existsSync(dataDriveReadyUri)) {
 				logger.debug('We are preparing the files. Please note that HotSwap will require more preparation time than installation of the system itself.')
 
