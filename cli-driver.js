@@ -477,26 +477,18 @@ program
 		})
 
 		if (!_.isEmpty(developerKitVersions)) {
-			await select({
+			const connectDeveloperKit = await select({
 				message: "Select DeveloperKit revision",
 				choices: developerKitVersions.map(path => ({
 					name: path,
 					value: path
 				}))
 			})
-		}
 
-		if (fs.existsSync(`${process.cwd()}/prebuilt/DeveloperKit.iso`)) {
-			const connectDeveloperKit = await confirm({
-				message: 'Would you like to connect DeveloperKit to your machine?',
-			})
-
-			if (connectDeveloperKit) {
-				developerKit = AppleDisk.ofDvDIso(
-					`${process.cwd()}/prebuilt/DeveloperKit.iso`,
-					'DeveloperKitIso'
-				)
-			}
+			developerKit = AppleDisk.ofDvDIso(
+				connectDeveloperKit,
+				'DeveloperKitIso'
+			)
 		}
 
 		if (await confirm({message: "Save the current virtual machine configuration?"})) {
