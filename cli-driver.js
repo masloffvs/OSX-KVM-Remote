@@ -35,6 +35,10 @@ for (const plist of _.get(config, 'plists', [])) {
 	checkFileExists(process.cwd() + `/osx-serial-generator/${plist}`)
 }
 
+function capitalizeFirstLetter(string) {
+	return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 async function generateWizardData() {
 	const dataStorageSize = parseInt(await select({
 		message: 'Select data storage size in GB',
@@ -314,7 +318,7 @@ program
 		const computer = new AppleComputer()
 
 		if (_.size(fs.readdirSync(`${process.cwd()}/prebuilt/hotdata`)) === 0) {
-			logger.error("")
+			logger.error("We were unable to find any HotSpawn prepared images in your configuration")
 			process.exit(1)
 		}
 
@@ -359,18 +363,8 @@ program
 			],
 		})
 
-		const disks = fs.readdirSync(`${process.cwd()}/prebuilt/hotdata`).map(path => ({
-			name: path,
-			value: `${process.cwd()}/prebuilt/hotdata/${path}`
-		}))
 
-		/**
-		 * @type {PhantomFile} dataDrive
-		 */
-		const dataDrive = await select({
-			message: 'Select HotData drive',
-			choices: disks
-		})
+		const dataDrive = `${process.cwd()}/prebuilt/hotdata/${capitalizeFirstLetter(String(operationSystemVersion))}.img`
 
 		const hotspawnDiskType =  await select({
 			message: 'Please select the data disk type that suits you best',
