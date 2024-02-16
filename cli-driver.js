@@ -24,6 +24,7 @@ createFolderIfNotExists('data/hdd')
 
 createFolderIfNotExists('prebuilt')
 createFolderIfNotExists('prebuilt/hotdata')
+createFolderIfNotExists('prebuilt/developerKit')
 
 checkFileExists(process.cwd() + "/OVMF_VARS-1024x768.fd")
 checkFileExists(process.cwd() + "/OVMF_CODE.fd")
@@ -470,6 +471,20 @@ program
 		}[operationSystemVersion]
 
 		let developerKit = undefined
+
+		const developerKitVersions = fs.readdirSync(`${process.cwd()}/prebuilt/developerKit`).map(path => {
+			return `${process.cwd()}/prebuilt/developerKit/${path}`
+		})
+
+		if (!_.isEmpty(developerKitVersions)) {
+			await select({
+				message: "Select DeveloperKit revision",
+				choices: developerKitVersions.map(path => ({
+					name: path,
+					value: path
+				}))
+			})
+		}
 
 		if (fs.existsSync(`${process.cwd()}/prebuilt/DeveloperKit.iso`)) {
 			const connectDeveloperKit = await confirm({

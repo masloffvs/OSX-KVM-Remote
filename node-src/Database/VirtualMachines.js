@@ -3,7 +3,16 @@ const _ = require("lodash");
 const {input} = require("@inquirer/prompts");
 
 class VirtualMachines {
-	static saveVirtualMachine({dataStorageSize, operationSystemVersion, ram, graphic}) {
+	static saveVirtualMachine(label=undefined, name=undefined, {
+		dataDrive,
+		bootableDrive,
+		baseSystemDrive,
+
+		graphicMode,
+
+		ramSize,
+		cpuSize,
+  }) {
 		LevelupDatabase.get('vms', async function (err, value) {
 			LevelupDatabase.put('vms', JSON.stringify({
 				vms: _.get(JSON.parse(String(value || "{}")), 'vms', []).concat([
@@ -13,12 +22,16 @@ class VirtualMachines {
 
 			LevelupDatabase.put(`vm/${name}`, JSON.stringify({
 				name,
-				label: await input({ message: 'Enter label of VM', default: name }),
+				label: label || name,
 				wizard: {
-					dataStorageSize,
-					operationSystemVersion,
-					ram,
-					graphic
+					dataDrive,
+					bootableDrive,
+					baseSystemDrive,
+
+					graphicMode,
+
+					ramSize,
+					cpuSize,
 				}
 			}))
 		})
