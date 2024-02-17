@@ -1,84 +1,105 @@
-# OSX-KVM-Remote
+# AppleComputer
 
-<img src="https://i.ibb.co/kQgsdYH/Background-1.png" align="right"
-alt="Size Limit logo by Anton Lovchikov" width="80" height="80">
+<img src="https://i.ibb.co/kQgsdYH/Background-1.png" align="right" width="80" height="80">
 
-**OSX-KVM-Remote** is a project aimed at creating a Virtual Hackintosh system for educational tasks, software builds, testing, kernel debugging, reversing, and macOS security research. It allows you to run macOS within a virtual machine on a modern Linux distribution, providing a reproducible and open-source alternative to Apple's closed ecosystem.
+**AppleComputer** is a project aimed at creating a Virtual Hackintosh system for educational tasks, software builds, testing, kernel debugging, reversing, and macOS security research. It allows you to run macOS within a virtual machine on a modern Linux distribution, providing a reproducible and open-source alternative to Apple's closed ecosystem.
 
 ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
 ![JavaScript](https://img.shields.io/badge/javascript-yellow?style=for-the-badge&logo=javascript&logoColor=white)
 ![Bash](https://img.shields.io/badge/bash-black?style=for-the-badge&logo=zsh&logoColor=white)
 
+### DISCLAIMER
+<small>
+  1. <b>THIS INFORMATION/RESEARCH HAS BEEN SHARED PURELY FOR EXPERIMENTAL AND RESEARCH PURPOSES. IT IS IN NO WAY MEANT TO PROMOTE THE CIRCUMVENTION OF ANYTHING THAT BELONGS TO AND/OR ANYTHING THAT IS THE CREATION/PRIVATE PROPERTY OF ANY CORPORATE ENTITY. THE INFORMATION THAT IS DOCUMENTED AND TRANSCRIBED HERE IS PURELY FOR EDUCATIONAL PURPOSES, AND PROOF OF CONCEPT. SHOULD YOU (OR ANYONE ELSE) CHOOSE TO UTILIZE THE INFORMATION THAT YOU'VE OBTAINED FROM THIS REPOSITORY AND THAT IS WRITTEN HERE IN ANY WAY, KNOW THAT THIS DISCLAIMER SERVES AS A LEGAL PROTECTION TO US AS THE CODE REPOSITORY CREATORS/MAINTAINERS, AND THAT WE ABSOLVE OURSELVES AS SUCH FROM ANY AND ALL RESPONSIBILITIES OR SITUATIONS THAT MIGHT ARISE FROM YOUR CHOOSING TO HAVE UTILIZED ANYTHING DISCUSSED IN THIS CODE REPOSITORY (LEGAL OR OTHERWISE).</b>
+  <br/>
+  <br/>
+  2. <b>IF YOU WISH TO USE THIS SOLUTION IN YOUR OWN BUSINESS, PLEASE CONSULT WITH YOUR LAWYERS REGARDING POSSIBLE RISKS. THE APPLECOMPUTER REPOSITORY AND THE USER MASLOFF IN PARTICULAR ARE NOT RESPONSIBLE FOR USING THE PRODUCT FOR COMMERCIAL PURPOSES, BUT ONLY PROVIDE A CONCEPT FOR UPDATING WORK WITH OPENCORE AND OSX IN QEMU</b>
+</small>
 
 ### Installation
+Installation of the **AppleComputer** system (ex OSX-KVM-Remote) occurs in 1 simple step. Using CURL you can download the installer in one step
+
 ```shell
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/masloffvs/OSX-KVM-Remote/main/get.sh)"
+bash -c "$(curl -fsSL https://rb.gy/kjmfry)"
 ```
 
 ### Run
 ```shell
-./run-server.sh
+node cli-driver.js help
+# for run server
+sh run-server.sh
 ```
 
 <hr/>
 
-### Usage
-##### First step. Export HOST-name for requests
+[//]: # (### Usage)
 
-```bash
-export HOST='localhost:3000'
+[//]: # (##### First step. Export HOST-name for requests)
+
+[//]: # ()
+[//]: # (```bash)
+
+[//]: # (export HOST='localhost:3000')
+
+[//]: # (```)
+
+### Ready-made solutions
+
+#### CLI Driver
+If you only need MacOS computers created and managed on your local machine, use the ready-made standard CLI driver - `cli-driver.js`. It comes with the system
+```shell
+node cli-driver.js --help
 ```
 
+### SDK
+AppleComputer uses JavaScript and NodeJS to work with emulators, prepare images, and control them. To build your basic computer, you just need to write the following code
 
-##### Create VM
-```bash
-# Create new VM and run it
+```javascript
+const computer = new AppleComputer()
 
-# name: only english chars
-# version: ['sonoma']
-curl -X POST http://$HOST/api/vms/create -d '{
-  "name": "myVmName",
-  "version": "sonoma"
-}'
+const dataVirtualDrive = await AppleDisk
+  .of("drive-name")
+  .setSize(256) // in GB
+  .spawnImage(false, true)
+
+computer
+  .setRam(4 * 1024) // in GB
+  .setVersionSystem('sonoma') // 
+  .setDrive(AppleBootableHub.prebuilt) // use prebuild OpenCore system
+  .setDrive(AppleBaseSystemHub.Sonoma) 
+  // .setDrive(developerKit, 5) // if you need DeveloperKit, see below
+  .setDataDrive(dataDisk.toVirtualDrive(true, "MacHDD")) // should be MacHDD
+  // .setDisplay('sdl')
+  // .useAppleKvm()
+  .setEnableGraphic(false) // false=vnc, true=native graphic window
+  .setHypervisorVmxConfig(true, true)
+  .setEnableVnc('127.0.0.1', 1) // Set VNC
+  .setOvmf(AppleOVMF.ovmfCodeFile)
+  .setOvmf(AppleOVMF.ovmfVars1024x768File)
+
+computer.spawnAndRunComputer() // Boom! Success!
 ```
 
-##### Stop exist VM
-```bash
-# Stop VM
+### Development
+You can use MacOS manufactured in this ecosystem for development.
+To speed up your process before the first start, here are a number of pre-made commands for installing the necessary components manually on a finished Mac
 
-# myVmName = yor vm name
-curl -X POST http://$HOST/api/vms/myVmName/stop
+#### Install Cocoapods
+Installing cocoapods on the system using Brew (we do not recommend using gem, there is a chance to waste a lot of time, and brew will install everything on its own, including xcode command line tools)
+```shell
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install cocoapods
+pod setup
+pod --version
 ```
 
-##### Start exist VM after stop it
-```bash
-# Run VM when VM stopped
-
-# myVmName = yor vm name
-curl -X POST http://$HOST/api/vms/myVmName/start
+##### Use Cocoapods in exist project
+Using Cocoapods in an existing project is very simple. First disintegrate and then install all dependencies using 2 commands
+```shell
+# cd project
+pod deintegrate
+pod install
 ```
-
-##### Get all exists VM (not snapshots!)
-```bash
-# Get all VM
-
-curl -X POST http://$HOST/api/vms/list
-```
-
-##### Get all exists disks
-```bash
-# Get all disks list
-
-curl -X POST http://$HOST/api/resources/disks/list
-```
-
-##### Get all snapshots
-```bash
-# Get all snapshots list
-
-curl -X POST http://$HOST/api/resources/snapshots/list
-```
-(you can run it via '/api/vms/***/start')
 
 
 ### Credits and Authors
@@ -100,48 +121,9 @@ curl -X POST http://$HOST/api/resources/snapshots/list
 * [osx-serial-generator by sickcodes](https://github.com/sickcodes/osx-serial-generator)
   Thanks for the utility that provides pre-generated serial numbers and other deterministic parameters for creating virtual hard disks.
 
-### Post-Installation
+### Motivation
+You can read the motivation of the author of OSX-KVM in the original repository.
 
-* See [networking notes](networking-qemu-kvm-howto.txt) on how to setup networking in your VM, outbound and also inbound for remote access to your VM via SSH, VNC, etc.
-* To passthrough GPUs and other devices, see [these notes](notes.md#gpu-passthrough-notes).
-* Need a different resolution? Check out the [notes](notes.md#change-resolution-in-opencore) included in this repository.
-* Trouble with iMessage? Check out the [notes](notes.md#trouble-with-imessage) included in this repository.
-* Highly recommended macOS tweaks - https://github.com/sickcodes/osx-optimizer
+On my own behalf I would like to add the following words. My motivation for working with this project is to make MacOS more accessible to researchers, scientists, and developers. With all this, I do not prohibit users of the framework from using this solution for commercial purposes (unless you get your ass kicked by Apple and the contractors of this repository :)).
 
-
-### Is This Legal?
-
-The "secret" Apple OSK string is widely available on the Internet. It is also included in a public court document [available here](http://www.rcfp.org/sites/default/files/docs/20120105_202426_apple_sealing.pdf). I am not a lawyer but it seems that Apple's attempt(s) to get the OSK string treated as a trade secret did not work out. Due to these reasons, the OSK string is freely included in this repository.
-
-Please review the ['Legality of Hackintoshing' documentation bits from Dortania's OpenCore Install Guide](https://dortania.github.io/OpenCore-Install-Guide/why-oc.html#legality-of-hackintoshing).
-
-Gabriel Somlo also has [some thoughts](http://www.contrib.andrew.cmu.edu/~somlo/OSXKVM/) on the legal aspects involved in running macOS under QEMU/KVM.
-
-You may also find [this 'Announcing Amazon EC2 Mac instances for macOS' article](https://aws.amazon.com/about-aws/whats-new/2020/11/announcing-amazon-ec2-mac-instances-for-macos/
-) interesting.
-
-Note: It is your responsibility to understand, and accept (or not accept) the
-Apple EULA.
-
-Note: This is not legal advice, so please make the proper assessments yourself
-and discuss with your lawyers if you have any concerns (Text credit: Dortania)
-
-
-### What motivated kholia
-
-My aim is to enable macOS based educational tasks, builds + testing, kernel
-debugging, reversing, and macOS security research in an easy, reproducible
-manner without getting 'invested' in Apple's closed ecosystem (too heavily).
-
-These `Virtual Hackintosh` systems are not intended to replace the genuine
-physical macOS systems.
-
-Personally speaking, this repository has been a way for me to 'exit' the Apple
-ecosystem. It has helped me to test and compare the interoperability of `Canon
-CanoScan LiDE 120` scanner, and `Brother HL-2250DN` laser printer. And these
-devices now work decently enough on modern versions of Ubuntu (Yay for free
-software). Also, a long time back, I had to completely wipe my (then) brand new
-`MacBook Pro (Retina, 15-inch, Late 2013)` and install Xubuntu on it - as the
-`OS X` kernel kept crashing on it!
-
-Backstory: I was a (poor) student in Canada in a previous life and Apple made [my work on cracking Apple Keychains](https://github.com/openwall/john/blob/bleeding-jumbo/src/keychain_fmt_plug.c) a lot harder than it needed to be. This is how I got interested in Hackintosh systems.
+My goal is to make AppleComputer the home for all the products that currently exist for Hackintosh. Make them accessible, easy to install and use, and versatile
