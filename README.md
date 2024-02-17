@@ -20,15 +20,20 @@
 Installation of the **AppleComputer** system (ex OSX-KVM-Remote) occurs in 1 simple step. Using CURL you can download the installer in one step
 
 ```shell
-bash -c "$(curl -fsSL https://rb.gy/kjmfry)"
+curl -fsSL https://rb.gy/kjmfry | bash
 ```
 
-### Run
-```shell
-node cli-driver.js help
-# for run server
-sh run-server.sh
-```
+[//]: # (### Run)
+
+[//]: # (```shell)
+
+[//]: # (node cli-driver.js help)
+
+[//]: # (# for run server)
+
+[//]: # (sh run-server.sh)
+
+[//]: # (```)
 
 <hr/>
 
